@@ -2,7 +2,7 @@
 
 use Glpi\Http\Firewall;
 
-define('PLUGIN_TRADEMARK_VERSION', '4.0.0');
+define('PLUGIN_TRADEMARK_VERSION', '0.0.1');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_TRADEMARK_MIN_GLPI_VERSION", "12.0.0");
@@ -51,25 +51,23 @@ function plugin_init_trademark() {
       // Make the callback page public again.
       Firewall::addPluginStrategyForLegacyScripts('trademark', '#^/front/login.css.php$#', Firewall::STRATEGY_NO_CHECK);
       Firewall::addPluginStrategyForLegacyScripts('trademark', '#^/front/picture.send.php$#', Firewall::STRATEGY_NO_CHECK);
+         
    }
 }
 
-// Get the name and the version of the plugin - Needed
 function plugin_version_trademark() {
-   return [
-      'name'           => t_trademark('Trademark'),
-      'version'        => PLUGIN_TRADEMARK_VERSION,
-      'author'         => '<a href="https://nextflow.com.br/">Nextflow</a>, <a href="https://github.com/edgardmessias">Edgard</a>',
-      'homepage'       => 'https://nextflow.com.br/plugin-glpi/trademark',
-      'license'        => 'GPL v2+',
-      'minGlpiVersion' => PLUGIN_TRADEMARK_MIN_GLPI_VERSION,
-      'requirements'   => [
-         'glpi' => [
-            'min' => PLUGIN_TRADEMARK_MIN_GLPI_VERSION,
-            'max' => PLUGIN_TRADEMARK_MAX_GLPI_VERSION,
-         ]
-      ]
-   ];
+    return [
+        'name'           => 'Trademark',
+        'version'        => PLUGIN_TRADEMARK_VERSION,
+        'author'         => 'edgardmessias, ssouz(Fork GLPI 12)',
+        'license'        => 'GPLv2+',
+        'homepage'       => 'https://github.com/sofiasouzzz/trademark-glpi',
+        'requirements'   => [
+            'glpi' => [
+                'min' => '12.0.0',
+            ]
+        ]
+    ];
 }
 
 // Optional : check prerequisites before install : may print errors or add to message after redirect
