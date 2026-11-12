@@ -2,13 +2,13 @@
 
 use Glpi\Http\Firewall;
 
-define('PLUGIN_TRADEMARK_VERSION', '3.0.0');
+define('PLUGIN_TRADEMARK_VERSION', '4.0.0');
 
 // Minimal GLPI version, inclusive
-define("PLUGIN_TRADEMARK_MIN_GLPI_VERSION", "11.0.0");
+define("PLUGIN_TRADEMARK_MIN_GLPI_VERSION", "12.0.0");
 
 // Maximum GLPI version, exclusive
-define("PLUGIN_TRADEMARK_MAX_GLPI_VERSION", "11.1.0");
+define("PLUGIN_TRADEMARK_MAX_GLPI_VERSION", "12.9.9");
 
 
 $folder = basename(dirname(__FILE__));
