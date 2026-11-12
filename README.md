@@ -1,15 +1,20 @@
-# Trademark for GLPI >= 10.0
+# Trademark for GLPI 12+
 
-Allow customization of logos, background and custom CSSs
+Customize logos, login background, favicons, and custom CSS/SCSS styles in GLPI.
 
-For GLPI <= 9.5 see [glpi-9 branch](https://github.com/edgardmessias/glpi-trademark/tree/glpi-9) or v1.x releases
+> **Note:** This is a maintained fork updated for compatibility and security hardening with **GLPI 12.0+**.  
+> For older GLPI versions (`<= 10.x` or `<= 9.5`), please refer to the upstream repository: [edgardmessias/glpi-trademark](https://github.com/edgardmessias/glpi-trademark).
 
-# Installation
- * Download the plugin: [trademark.zip](https://github.com/edgardmessias/glpi-trademark/releases/latest/download/trademark.zip) or [trademark.tgz](https://github.com/edgardmessias/glpi-trademark/releases/latest/download/trademark.tgz)
- * Uncompress the archive to the `<GLPI_ROOT>/plugins/trademark` directory
- * Navigate to the Configuration > Plugins page,
- * Install and activate the plugin.
+## Features
+* Custom login screen background and logos
+* Custom internal header logos and favicons
+* Custom SCSS/CSS injection per theme
+* Hardened public endpoints (`login.css.php`) compatible with GLPI 12 Firewall strategies
 
-# Partnership
+## Installation
 
-[Nextflow](https://nextflow.com.br)
+### Via Git (Recommended)
+1. Clone this repository directly into your GLPI `plugins` directory:
+   ```bash
+   cd /var/www/html/glpi/plugins
+   git clone [https://github.com/sofiasouzzz/trademark-glpi.git](https://github.com/sofiasouzzz/trademark-glpi.git) trademark
