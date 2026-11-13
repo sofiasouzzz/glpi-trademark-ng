@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: https://github.com/edgardmessias/glpi-trademark/"
 "issues\n"
 "POT-Creation-Date: 2021-02-17 13:42-0300\n"
-"PO-Revision-Date: 2021-01-30 16:27-0300\n"
+"PO-Revision-Date: 2026-11-13 15:51-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: pt_BR\n"
@@ -73,6 +73,18 @@ msgstr "Personalizado"
 #: inc/config.class.php:377
 msgid "Footer text"
 msgstr "Texto do rodapé"
+
+#: inc/config.class.php:373
+msgid "Max Width"
+msgstr "Largura máxima"
+
+#: inc/config.class.php:374
+msgid "Max Height"
+msgstr "Altura máxima"
+
+#: inc/config.class.php:378
+msgid "Click save to apply your brand modifications."
+msgstr "Clique em Salvar para aplicar as alterações de identidade visual."
 
 #: inc/config.class.php:409
 msgid "Theme"

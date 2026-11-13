@@ -74,6 +74,18 @@ msgstr ""
 msgid "Footer text"
 msgstr ""
 
+#: inc/config.class.php:373
+msgid "Max Width"
+msgstr ""
+
+#: inc/config.class.php:374
+msgid "Max Height"
+msgstr ""
+
+#: inc/config.class.php:378
+msgid "Click save to apply your brand modifications."
+msgstr ""
+
 #: inc/config.class.php:409
 msgid "Theme"
 msgstr ""
