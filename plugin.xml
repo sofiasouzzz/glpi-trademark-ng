@@ -10,7 +10,7 @@
         </short>
         <long>
             <en><![CDATA[
-               # Trademark for GLPI >= 11.0
+               # Trademark for GLPI 12.0+ (PHP 8.5+)
 
                ![Lint](https://github.com/edgardmessias/glpi-trademark/workflows/Lint/badge.svg)
                [![CodeFactor](https://www.codefactor.io/repository/github/edgardmessias/glpi-trademark/badge)](https://www.codefactor.io/repository/github/edgardmessias/glpi-trademark)
@@ -31,10 +31,10 @@
                ]]></en>
         </long>
     </description>
-    <homepage>https://github.com/edgardmessias/glpi-trademark</homepage>
-    <download>https://github.com/edgardmessias/glpi-trademark/releases</download>
-    <issues>https://github.com/edgardmessias/glpi-trademark/issues</issues>
-    <readme>https://github.com/edgardmessias/glpi-trademark/wiki</readme>
+    <homepage>https://github.com/sofiasouzzz/trademark-glpi</homepage>
+    <download>https://github.com/sofiasouzzz/trademark-glpi/releases</download>
+    <issues>https://github.com/sofiasouzzz/trademark-glpi/issues</issues>
+    <readme>https://github.com/sofiasouzzz/trademark-glpi/blob/main/README.md</readme>
     <authors>
         <author>Edgard Lorraine Messias</author>
         <author>Nextflow</author>

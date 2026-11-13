@@ -10,6 +10,9 @@ define("PLUGIN_TRADEMARK_MIN_GLPI_VERSION", "12.0.0");
 // Maximum GLPI version, exclusive
 define("PLUGIN_TRADEMARK_MAX_GLPI_VERSION", "12.9.9");
 
+// Minimal PHP version, inclusive
+define("PLUGIN_TRADEMARK_MIN_PHP_VERSION", "8.5.0");
+
 
 $folder = basename(dirname(__FILE__));
 
@@ -64,7 +67,10 @@ function plugin_version_trademark() {
         'requirements'   => [
             'glpi' => [
                 'min' => '12.0.0',
-            ]
+            ],
+            'php' => [
+                'min' => PLUGIN_TRADEMARK_MIN_PHP_VERSION,
+            ],
         ]
     ];
 }
@@ -79,8 +85,8 @@ function plugin_trademark_check_prerequisites() {
       echo "This plugin is not yet validated for this GLPI version";
       return false;
    }
-   if (version_compare(PHP_VERSION, '8.2', '<')) {
-      echo "This plugin requires PHP >= 8.2";
+   if (version_compare(PHP_VERSION, PLUGIN_TRADEMARK_MIN_PHP_VERSION, '<')) {
+      echo "This plugin requires PHP >= " . PLUGIN_TRADEMARK_MIN_PHP_VERSION;
       return false;
    }
    return true;

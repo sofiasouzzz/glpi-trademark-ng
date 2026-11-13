@@ -1,0 +1,297 @@
+<style>
+   .trademark-card {
+      max-width: 1200px;
+      margin: 0 auto;
+   }
+   .trademark-card .trademark-tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+   }
+   .trademark-card .trademark-tabs .nav-link {
+      white-space: nowrap;
+   }
+   .trademark-card .trademark-tabs .nav-link.active {
+      background-color: var(--bs-tertiary-bg) !important;
+   }
+   .CodeMirror {
+      border: 0 !important;
+      min-height: 180px;
+      font-size: 13px;
+   }
+   .trademark-themeselect-container .select2-selection__rendered,
+   .trademark-themeselect-dropdown .select2-results__option {
+      height: 60px !important;
+      line-height: 60px !important;
+   }
+   .trademark-themeselect-container .select2-selection__rendered img,
+   .trademark-themeselect-dropdown .select2-results__option img {
+      width: 130px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      float: right;
+   }
+   .trademark-themeselect-container.select2-selection--single {
+      height: 60px !important;
+   }
+   .trademark-themeselect-container.select2-selection--single:before {
+      line-height: 60px !important;
+   }
+   .trademark-themeselect-container .select2-selection__arrow {
+      height: 59px !important;
+   }
+</style>
+
+{% if can_edit %}
+<form name="form" action="{{ form_url }}" method="post" enctype="multipart/form-data">
+{% endif %}
+{{ config_context_html|raw }}
+{{ config_class_html|raw }}
+
+<div class="card card-glpi shadow-sm border trademark-card mb-4">
+   <div class="card-header bg-body-tertiary border-bottom d-flex flex-column align-items-stretch gap-3">
+      <div class="d-flex align-items-center gap-2">
+         <i class="ti ti-palette fs-1 text-primary"></i>
+         <div>
+            <h3 class="card-title m-0 fw-bold">{{ labels.trademark }}</h3>
+            <div class="text-muted small">{{ labels.customize }}</div>
+         </div>
+      </div>
+
+      <ul class="nav nav-tabs card-header-tabs trademark-tabs w-100" id="trademark-tabs-{{ rand }}" role="tablist">
+         <li class="nav-item" role="presentation">
+            <button class="nav-link active d-flex align-items-center gap-2 fw-semibold" id="tab-favicon-btn" data-bs-toggle="tab" data-bs-target="#tab-trademark-favicon" type="button" role="tab" aria-selected="true">
+               <i class="ti ti-browser"></i><span>{{ labels.favicon_title }}</span>
+            </button>
+         </li>
+         <li class="nav-item" role="presentation">
+            <button class="nav-link d-flex align-items-center gap-2 fw-semibold" id="tab-login-btn" data-bs-toggle="tab" data-bs-target="#tab-trademark-login" type="button" role="tab" aria-selected="false">
+               <i class="ti ti-login"></i><span>{{ labels.login_page }}</span>
+            </button>
+         </li>
+         <li class="nav-item" role="presentation">
+            <button class="nav-link d-flex align-items-center gap-2 fw-semibold" id="tab-internal-btn" data-bs-toggle="tab" data-bs-target="#tab-trademark-internal" type="button" role="tab" aria-selected="false">
+               <i class="ti ti-layout-navbar"></i><span>{{ labels.internal_page }}</span>
+            </button>
+         </li>
+      </ul>
+   </div>
+
+   <div class="card-body p-4 tab-content">
+      <div class="tab-pane fade show active" id="tab-trademark-favicon" role="tabpanel">
+         <div class="row g-4">
+            <div class="col-lg-6">
+               {% include '@trademark/partials/picture_field.html.twig' with {picture: picture_fields.favicon} %}
+            </div>
+
+            <div class="col-lg-6">
+               <div class="mb-3">
+                  <label class="form-label fw-bold">{{ labels.title }} ({{ labels.browser_tab_title }})</label>
+                  <input type="text" class="form-control" name="page_title" value="{{ fields.page_title }}" placeholder="Ex: GLPI Corporativo">
+                  <div class="form-text text-muted small">{{ labels.replaces_title }}</div>
+               </div>
+
+               <div class="mb-3">
+                  <label class="form-label fw-bold">{{ labels.footer }}</label>
+                  {{ page_footer_display_html|raw }}
+               </div>
+            </div>
+
+            <div class="col-12">
+               <div class="mb-3">
+                  <label class="form-label fw-bold">{{ labels.footer_text }}</label>
+                  {{ page_footer_text_html|raw }}
+                  <script type="text/javascript">
+                     $(document).ready(function() {
+                        if (typeof tinyMCE !== "undefined") {
+                           var editor = tinyMCE.get({{ footer_editor_id|json_encode|raw }});
+                           if (editor && editor.settings) {
+                              editor.settings.force_br_newlines = true;
+                              editor.settings.force_p_newlines = false;
+                              editor.settings.forced_root_block = '';
+                           }
+                        }
+                     });
+                  </script>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-trademark-login" role="tabpanel">
+         <div class="row g-4">
+            <div class="col-12">
+               <div class="card p-3 bg-body-tertiary border">
+                  <div class="row align-items-center g-3">
+                     <div class="col-md-3">
+                        <label class="form-label m-0 fw-bold"><i class="ti ti-brush me-1 text-primary"></i>{{ labels.theme }}</label>
+                        <div class="small text-muted">{{ labels.select_theme }}</div>
+                     </div>
+                     <div class="col-md-7">
+                        <select name="login_theme" class="form-select">
+                           <option value="">GLPI ({{ labels.original }})</option>
+                           {% for theme in theme_options %}
+                              <option value="{{ theme.id }}"{% if theme.preview %} data-preview="{{ theme.preview }}"{% endif %}{% if theme.selected %} selected="selected"{% endif %}>{{ theme.name }}</option>
+                           {% endfor %}
+                        </select>
+                        <script type="text/javascript">
+                           function trademarkFormatThemes(theme) {
+                              var data = theme && theme.element && theme.element.dataset || {};
+                              if (!theme.id || !data.preview) {
+                                 return $('<span></span>', {
+                                    html: '<img src="../plugins/trademark/pics/login.preview.png"/>&nbsp;' + theme.text
+                                 });
+                              }
+                              return $('<span></span>', {
+                                 html: '<img src="../plugins/trademark/themes/' + theme.id + '/' + data.preview + '"/>&nbsp;' + theme.text
+                              });
+                           }
+                           $("select[name=login_theme]").select2({
+                              templateResult: trademarkFormatThemes,
+                              templateSelection: trademarkFormatThemes,
+                              width: '100%',
+                              selectionCssClass: 'trademark-themeselect-container',
+                              dropdownCssClass: 'trademark-themeselect-dropdown',
+                              escapeMarkup: function(m) { return m; }
+                           });
+                        </script>
+                     </div>
+                     <div class="col-md-2 text-md-end">
+                        <button type="button" id="trademark-preview" class="btn btn-outline-primary d-inline-flex align-items-center gap-1 w-100 justify-content-center">
+                           <i class="ti ti-external-link"></i>{{ labels.preview }}
+                        </button>
+                        <script type="text/javascript">
+                           $('#trademark-preview').on('click', function(e) {
+                              e.preventDefault();
+                              var url = {{ (root_doc ~ '/index.php')|json_encode|raw }};
+                              url += '?noAUTO=1';
+                              var theme = $("select[name=login_theme]").val() || 'original';
+                              url += '&theme=' + encodeURIComponent(theme);
+                              window.open(url, 'trademark_preview', 'titlebar=0&status=0');
+                           });
+                        </script>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {% if theme_variables %}
+               <div class="col-12">
+                  <div class="card p-3 border shadow-none bg-body-tertiary">
+                     <h5 class="fw-bold mb-3"><i class="ti ti-color-swatch me-1 text-primary"></i>{{ labels.theme_colors }}</h5>
+                     <div class="row g-3">
+                        {% for variable in theme_variables %}
+                           <div class="col-md-4">
+                              <label class="form-label small fw-semibold">{{ variable.label }}</label>
+                              <div class="d-flex align-items-center gap-2">
+                                 {{ variable.color_html|raw }}
+                                 <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" name="_blank_{{ variable.field_name }}" id="_blank_{{ variable.field_name }}" value="1">
+                                    <label class="form-check-label text-muted small" for="_blank_{{ variable.field_name }}">{{ labels.reset }}</label>
+                                 </div>
+                              </div>
+                           </div>
+                        {% endfor %}
+                     </div>
+                  </div>
+               </div>
+            {% endif %}
+
+            <div class="col-lg-6">
+               {% include '@trademark/partials/picture_field.html.twig' with {picture: picture_fields.login} %}
+               <div class="row g-2">
+                  <div class="col-6">
+                     <label class="form-label small fw-semibold">{{ labels.max_width }}</label>
+                     <input type="text" class="form-control form-control-sm font-monospace" name="login_picture_max_width" value="{{ fields.login_picture_max_width }}">
+                  </div>
+                  <div class="col-6">
+                     <label class="form-label small fw-semibold">{{ labels.max_height }}</label>
+                     <input type="text" class="form-control form-control-sm font-monospace" name="login_picture_max_height" value="{{ fields.login_picture_max_height }}">
+                  </div>
+               </div>
+            </div>
+
+            <div class="col-lg-6">
+               {% include '@trademark/partials/picture_field.html.twig' with {picture: picture_fields.background} %}
+            </div>
+
+            <div class="col-12">
+               {% include '@trademark/partials/css_editor.html.twig' with {editor: css_editors.login, labels: labels} %}
+            </div>
+         </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-trademark-internal" role="tabpanel">
+         <div class="row g-4">
+            <div class="col-lg-7">
+               {% include '@trademark/partials/picture_field.html.twig' with {picture: picture_fields.internal} %}
+            </div>
+
+            <div class="col-lg-5">
+               <div class="card p-3 bg-body-tertiary border">
+                  <h5 class="fw-bold mb-3"><i class="ti ti-ruler-2 me-1 text-primary"></i>{{ labels.logo_dimensions }}</h5>
+                  <div class="mb-3">
+                     <label class="form-label small fw-semibold">{{ labels.width }}</label>
+                     <input type="text" class="form-control font-monospace" name="internal_picture_width" value="{{ fields.internal_picture_width }}">
+                  </div>
+                  <div class="mb-2">
+                     <label class="form-label small fw-semibold">{{ labels.height }}</label>
+                     <input type="text" class="form-control font-monospace" name="internal_picture_height" value="{{ fields.internal_picture_height }}">
+                  </div>
+               </div>
+            </div>
+
+            <div class="col-12">
+               {% include '@trademark/partials/css_editor.html.twig' with {editor: css_editors.internal, labels: labels} %}
+            </div>
+         </div>
+      </div>
+   </div>
+
+   {% if can_edit %}
+      <div class="card-footer bg-body-tertiary d-flex align-items-center justify-content-between p-3 border-top">
+         <div class="text-muted small d-none d-sm-block">
+            <i class="ti ti-check text-success me-1"></i>{{ labels.save_hint }}
+         </div>
+         <button type="submit" name="update" value="1" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4 shadow-sm">
+            <i class="ti ti-device-floppy fs-2"></i>
+            <span class="fw-semibold">{{ labels.save }}</span>
+         </button>
+      </div>
+   {% endif %}
+</div>
+
+{% if can_edit %}
+{{ close_form_html|raw }}
+{% endif %}
+
+<script type="text/javascript">
+   $(function() {
+      var tabsContainer = document.getElementById("trademark-tabs-{{ rand }}");
+      if (tabsContainer) {
+         tabsContainer.querySelectorAll("button[data-bs-toggle='tab']").forEach(function(tabBtn) {
+            tabBtn.addEventListener("shown.bs.tab", function(event) {
+               var targetSelector = event.target.getAttribute("data-bs-target");
+               if (targetSelector) {
+                  localStorage.setItem("trademark_last_tab", targetSelector);
+                  $(targetSelector).find(".trademark-codemirror").each(function() {
+                     var cm = $(this).data("CodeMirrorInstance");
+                     if (cm) {
+                        cm.refresh();
+                     }
+                  });
+               }
+            });
+         });
+
+         var savedTab = localStorage.getItem("trademark_last_tab");
+         if (savedTab) {
+            var targetBtn = tabsContainer.querySelector("button[data-bs-target='" + savedTab + "']");
+            if (targetBtn && typeof bootstrap !== "undefined" && bootstrap.Tab) {
+               var bsTab = new bootstrap.Tab(targetBtn);
+               bsTab.show();
+            }
+         }
+      }
+   });
+</script>
