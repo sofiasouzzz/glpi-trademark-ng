@@ -40,10 +40,9 @@ function plugin_init_trademark() {
 
       $PLUGIN_HOOKS['display_login']['trademark'] = "plugin_trademark_display_login";
 
-      // Tip Trick to add version in css output
-      // GLPI 11: core uses plugin version for cache busting; use string path
-      $PLUGIN_HOOKS["add_css"]['trademark'] = 'front/internal.css.php';
-      $PLUGIN_HOOKS["add_javascript"]['trademark'] = 'front/internal.js.php';
+      $assetVersion = PluginTrademarkToolbox::getTimestamp();
+      $PLUGIN_HOOKS["add_css"]['trademark'] = 'front/internal.css.php?_=' . $assetVersion;
+      $PLUGIN_HOOKS["add_javascript"]['trademark'] = 'front/internal.js.php?_=' . $assetVersion;
 
       $CFG_GLPI['javascript']['config']['config'][] = 'codemirror';
       $CFG_GLPI['javascript']['config']['config'][] = 'tinymce';

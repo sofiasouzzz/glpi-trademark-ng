@@ -40,13 +40,22 @@ class PluginTrademarkToolbox {
    }
 
    public static function getPictureUrl($path) {
-      global $CFG_GLPI;
-
       if (empty($path)) {
          return null;
       }
 
-      return Html::getPrefixedUrl('/plugins/trademark/front/picture.send.php?path=' . $path);
+      $pictureParams = [];
+      if (str_contains($path, '&theme=')) {
+         [$picturePath, $theme] = explode('&theme=', $path, 2);
+         $pictureParams['theme'] = $theme;
+      } else {
+         $picturePath = $path;
+      }
+
+      $pictureParams['path'] = $picturePath;
+      $pictureParams['_']    = self::getTimestamp();
+
+      return Html::getPrefixedUrl('/plugins/trademark/front/picture.send.php?' . http_build_query($pictureParams));
    }
 
    public static function savePicture($src, $uniq_prefix = null) {

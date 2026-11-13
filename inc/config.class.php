@@ -24,8 +24,6 @@ class PluginTrademarkConfig extends CommonDBTM
       return $defaultValue;
    }
 
-   // Assinaturas sem tipos adicionais para manter compatibilidade com CommonGLPI do GLPI 12,
-   // que declara getTabNameForItem e displayTabContentForItem sem tipos no $withtemplate.
    public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
    {
       switch (get_class($item)) {
@@ -117,7 +115,7 @@ class PluginTrademarkConfig extends CommonDBTM
 
          if ($input[$type] === 'scss' && PluginTrademarkScss::hasScssSuport()) {
             try {
-               $variables                       = [];
+               $variables                         = [];
                $variables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
                PluginTrademarkScss::compileScss($input[$fullName], $variables);
             } catch (\Throwable $th) {
@@ -189,107 +187,128 @@ class PluginTrademarkConfig extends CommonDBTM
       return true;
    }
 
-   protected function buildPictureLine(string $name, ?string $recommendedSize = null): void
+   /**
+    * Renderiza um bloco corporativo moderno de upload e pré-visualização de imagem.
+    */
+   protected function renderPictureField(string $name, string $label, ?string $recommendedSize = null): void
    {
-      if (!empty($this->fields[$name])) {
-         echo '<td>';
-         echo Html::image(PluginTrademarkToolbox::getPictureUrl($this->fields[$name]), [
-            'style' => '
-               max-width: 100px;
-               max-height: 100px;
-               background-image: linear-gradient(45deg, #b0b0b0 25%, transparent 25%), linear-gradient(-45deg, #b0b0b0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #b0b0b0 75%), linear-gradient(-45deg, transparent 75%, #b0b0b0 75%);
-               background-size: 10px 10px;
-               background-position: 0 0, 0 5px, 5px -5px, -5px 0px;',
-            'class' => 'picture_square',
-         ]);
-         echo "&nbsp;";
-         echo Html::getCheckbox([
-            'title' => t_trademark('Reset'),
-            'name'  => "_blank_$name",
-         ]);
-         echo "&nbsp;" . t_trademark('Reset');
-         echo '</td>';
-         echo '<td colspan="2">';
-      } else {
-         echo '<td colspan="3">';
+      $hasImage = !empty($this->fields[$name]);
+
+      echo '<div class="mb-3">';
+      echo '<label class="form-label fw-bold d-flex align-items-center justify-content-between">';
+      echo '<span>' . $label . '</span>';
+      if ($recommendedSize) {
+         echo '<span class="badge bg-secondary-lt text-secondary font-monospace"><i class="ti ti-dimensions me-1"></i>' . sprintf(t_trademark('Recommended size: %1$s'), $recommendedSize) . '</span>';
       }
+      echo '</label>';
+
+      echo '<div class="card p-3 bg-body-tertiary border">';
+      echo '<div class="row align-items-center g-3">';
+
+      if ($hasImage) {
+         $imageUrl = PluginTrademarkToolbox::getPictureUrl($this->fields[$name]);
+         echo '<div class="col-auto">';
+         echo '<div class="rounded border p-2 bg-body d-flex align-items-center justify-content-center shadow-sm" style="min-width: 110px; min-height: 75px; max-width: 180px;">';
+         echo Html::image($imageUrl, [
+            'style' => 'max-width: 140px; max-height: 65px; object-fit: contain;',
+            'alt'   => $label,
+            'class' => 'img-fluid',
+         ]);
+         echo '</div>';
+         echo '</div>';
+
+         echo '<div class="col-auto">';
+         echo '<div class="form-check form-switch">';
+         echo '<input class="form-check-input" type="checkbox" name="_blank_' . $name . '" id="_blank_' . $name . '" value="1">';
+         echo '<label class="form-check-label text-danger small fw-semibold" for="_blank_' . $name . '">';
+         echo '<i class="ti ti-trash me-1"></i>' . t_trademark('Reset') . ' (' . __('Remove') . ')';
+         echo '</label>';
+         echo '</div>';
+         echo '</div>';
+      }
+
+      echo '<div class="col">';
       Html::file([
          'name'          => $name,
          'onlyimages'    => true,
          'min_file_size' => 1,
       ]);
-      if ($recommendedSize) {
-         echo '<small>';
-         echo sprintf(t_trademark('Recommended size: %1$s'), $recommendedSize);
-         echo '</small>';
-      }
-      echo '</td>';
+      echo '</div>';
+
+      echo '</div>'; // .row
+      echo '</div>'; // .card
+      echo '</div>'; // .mb-3
    }
 
-   protected function buildCssLine(string $name, string $label): void
+   /**
+    * Renderiza o editor de CSS/SCSS corporativo com CodeMirror e seletor de tipo.
+    */
+   protected function renderCssEditor(string $name, string $label): void
    {
       $fullName = "{$name}_css_custom";
       $type     = "{$name}_css_type";
+      $rand     = mt_rand();
 
-      echo "<tr><th colspan='4'>" . sprintf(t_trademark('Custom CSS for %1$s'), $label) . "</th></tr>";
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>";
-      echo t_trademark('CSS Type') . ':';
-      echo "</td>";
-      echo "<td colspan='3'>";
+      echo '<div class="card mt-4 border shadow-sm">';
+      echo '<div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between">';
+      echo '<div class="d-flex align-items-center gap-2">';
+      echo '<i class="ti ti-code fs-2 text-primary"></i>';
+      echo '<span class="fw-bold">' . sprintf(t_trademark('Custom CSS for %1$s'), $label) . '</span>';
+      echo '</div>';
 
+      echo '<div class="d-flex align-items-center gap-2">';
+      echo '<label class="form-label m-0 small fw-semibold text-muted">' . t_trademark('CSS Type') . ':</label>';
       $css_type = [
          'off' => __('Disabled'),
          'css' => 'CSS',
       ];
-
       if (PluginTrademarkScss::hasScssSuport()) {
          $css_type['scss'] = 'SCSS';
       }
-      Dropdown::showFromArray($type, $css_type, ['value' => $this->fields[$type]]);
-      echo "</td>";
-      echo "</tr>";
-      echo "<tr class='tab_bg_1'>";
-      echo "<td colspan='4' style='max-width: 1000px'>";
-      $rand = mt_rand();
+      Dropdown::showFromArray($type, $css_type, [
+         'value'   => $this->fields[$type],
+         'display' => true,
+      ]);
+      echo '</div>';
+      echo '</div>'; // .card-header
 
+      echo '<div class="card-body p-0">';
       echo sprintf(
          '<textarea %1$s>',
          Html::parseAttributes([
             'id'    => $fullName . '_' . $rand,
             'name'  => $fullName,
-            'class' => 'trademark-codemirror',
+            'class' => 'form-control trademark-codemirror font-monospace',
          ])
       );
-      echo rtrim($this->fields[$fullName]);
-      echo str_repeat("\n", 10);
+      echo htmlspecialchars(rtrim($this->fields[$fullName]), ENT_QUOTES, 'UTF-8');
       echo '</textarea>';
+      echo '</div>'; // .card-body
+      echo '</div>'; // .card
 
       echo Html::scriptBlock('
          $(function() {
             var textarea = document.getElementById("' . $fullName . '_' . $rand . '");
-            var editorCode = CodeMirror.fromTextArea(textarea, {
-               mode: "text/x-scss",
-               lineNumbers: true,
-               viewportMargin: Infinity,
-               extraKeys: {
-                  "Ctrl-Space": "autocomplete"
-               },
-               foldGutter: true,
-               gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
-            });
-            $("#' . $fullName . '_' . $rand . '").data("CodeMirrorInstance", editorCode);
-
-            // Fix bad display of gutter (see https://github.com/codemirror/CodeMirror/issues/3098 )
-            setTimeout(function () {editorCode.refresh();}, ' . (500 + self::$_i++ * 100) . ');
+            if (textarea && typeof CodeMirror !== "undefined") {
+               var editorCode = CodeMirror.fromTextArea(textarea, {
+                  mode: "text/x-scss",
+                  lineNumbers: true,
+                  viewportMargin: Infinity,
+                  extraKeys: {
+                     "Ctrl-Space": "autocomplete"
+                  },
+                  foldGutter: true,
+                  gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+               });
+               $("#' . $fullName . '_' . $rand . '").data("CodeMirrorInstance", editorCode);
+               setTimeout(function () { editorCode.refresh(); }, ' . (300 + self::$_i++ * 80) . ');
+            }
          });
       ');
-      echo "</td>";
-      echo "</tr>\n";
    }
 
    /**
-    * Exibe o formulário de configuração do plugin na aba Configuração > Trademark.
+    * Exibe o formulário corporativo moderno de configuração na aba Configuração > Trademark.
     */
    public function showFormDisplay(): bool
    {
@@ -303,104 +322,131 @@ class PluginTrademarkConfig extends CommonDBTM
       $this->fields = array_merge($this->fields, Config::getConfigurationValues('trademark'));
 
       $canedit = Session::haveRight(Config::$rightname, UPDATE);
+      $rand    = mt_rand();
+
+      echo '<style>
+      .trademark-card {
+         max-width: 1200px;
+         margin: 0 auto;
+      }
+      .CodeMirror {
+         border: 0 !important;
+         min-height: 180px;
+         font-size: 13px;
+      }
+      .trademark-themeselect-container .select2-selection__rendered,
+      .trademark-themeselect-dropdown .select2-results__option {
+         height: 60px !important;
+         line-height: 60px !important;
+      }
+      .trademark-themeselect-container .select2-selection__rendered img,
+      .trademark-themeselect-dropdown .select2-results__option img {
+         width: 130px;
+         height: 60px;
+         object-fit: cover;
+         border-radius: 4px;
+         float: right;
+      }
+      .trademark-themeselect-container.select2-selection--single {
+         height: 60px !important;
+      }
+      .trademark-themeselect-container.select2-selection--single:before {
+         line-height: 60px !important;
+      }
+      .trademark-themeselect-container .select2-selection__arrow {
+         height: 59px !important;
+      }
+      </style>';
+
       if ($canedit) {
-         echo "<form name='form' action=\"" . Toolbox::getItemTypeFormURL('Config') . "\" method='post'>";
+         echo "<form name='form' action=\"" . Toolbox::getItemTypeFormURL('Config') . "\" method='post' enctype='multipart/form-data'>";
       }
       echo Html::hidden('config_context', ['value' => 'trademark']);
       echo Html::hidden('config_class', ['value' => __CLASS__]);
 
-      echo "<div class='center' id='tabsbody'>";
+      echo '<div class="card card-glpi shadow-sm border trademark-card mb-4">';
 
-      $rand = mt_rand();
-      echo "<style>
-      #tabs$rand .ui-tabs-nav {
-         width: auto;
-      }
-      #tabs$rand .ui-tabs-nav li {
-         clear: none;
-         width: auto;
-         margin-right: 5px;
-      }
-      #tabs$rand .ui-tabs-nav li a {
-         width: auto;
-      }
-      #tabs$rand .ui-tabs-panel {
-         margin-left: 0;
-      }
-      .CodeMirror {
-         border: 1px solid #eee;
-         height: auto;
-      }
-      .trademark-themeselect-container .select2-selection__rendered,
-      .trademark-themeselect-dropdown .select2-results__option {
-         height: 80px !important;
-         line-height: 80px !important;
-      }
-      .trademark-themeselect-container .select2-selection__rendered img,
-      .trademark-themeselect-dropdown .select2-results__option img {
-         width: 170px;
-         height: 80px;
-         object-fit:cover;
-         float: right;
-      }
-      .trademark-themeselect-container.select2-selection--single {
-         min-width: 350px;
-         max-width: 350px;
-         height: 80px !important;
-      }
-      .trademark-themeselect-container.select2-selection--single:before {
-         line-height: 80px !important;
-      }
-      .trademark-themeselect-container .select2-selection__arrow {
-         height: 79px !important;
-      }
-      </style>";
+      // ── Cabeçalho com Abas Corporativas Bootstrap 5 ─────────────────────────
+      echo '<div class="card-header bg-body-tertiary border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">';
+      echo '<div class="d-flex align-items-center gap-2">';
+      echo '<i class="ti ti-palette fs-1 text-primary"></i>';
+      echo '<div>';
+      echo '<h3 class="card-title m-0 fw-bold">' . t_trademark('Trademark') . '</h3>';
+      echo '<div class="text-muted small">' . __('Customize logos, backgrounds and custom styling') . '</div>';
+      echo '</div>';
+      echo '</div>';
 
-      // ── Geral (Favicon + Título) ──────────────────────────────────────────────
-      echo "<div id='tab_trademark_favicon'>";
-      echo "<table class='tab_cadre_fixe'>";
+      echo '<ul class="nav nav-tabs card-header-tabs" id="trademark-tabs-' . $rand . '" role="tablist">';
+      echo '<li class="nav-item" role="presentation">';
+      echo '<button class="nav-link active d-flex align-items-center gap-2 fw-semibold" id="tab-favicon-btn" data-bs-toggle="tab" data-bs-target="#tab-trademark-favicon" type="button" role="tab" aria-selected="true">';
+      echo '<i class="ti ti-browser"></i><span>' . t_trademark('Favicon and Title') . '</span>';
+      echo '</button>';
+      echo '</li>';
 
-      echo "<tr class='noHover'><th colspan='4' >" . t_trademark('Favicon and Title') . "</th></tr>";
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __('Picture') . "</td>";
-      $this->buildPictureLine('favicon_picture', '192px x 192px');
-      echo "</tr>\n";
+      echo '<li class="nav-item" role="presentation">';
+      echo '<button class="nav-link d-flex align-items-center gap-2 fw-semibold" id="tab-login-btn" data-bs-toggle="tab" data-bs-target="#tab-trademark-login" type="button" role="tab" aria-selected="false">';
+      echo '<i class="ti ti-login"></i><span>' . t_trademark('Login Page') . '</span>';
+      echo '</button>';
+      echo '</li>';
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __('Title') . "</td>";
-      echo "<td colspan='3'>";
+      echo '<li class="nav-item" role="presentation">';
+      echo '<button class="nav-link d-flex align-items-center gap-2 fw-semibold" id="tab-internal-btn" data-bs-toggle="tab" data-bs-target="#tab-trademark-internal" type="button" role="tab" aria-selected="false">';
+      echo '<i class="ti ti-layout-navbar"></i><span>' . t_trademark('Internal Page') . '</span>';
+      echo '</button>';
+      echo '</li>';
+      echo '</ul>';
+      echo '</div>'; // .card-header
+
+      // ── Corpo do Card com Conteúdo das Abas ─────────────────────────────────
+      echo '<div class="card-body p-4 tab-content">';
+
+      // ────────────────────────────────────────────────────────────────────────
+      // ABA 1: Identidade & Geral
+      // ────────────────────────────────────────────────────────────────────────
+      echo '<div class="tab-pane fade show active" id="tab-trademark-favicon" role="tabpanel">';
+      echo '<div class="row g-4">';
+
+      echo '<div class="col-lg-6">';
+      $this->renderPictureField('favicon_picture', __('Favicon') . ' (' . __('Picture') . ')', '192px x 192px');
+      echo '</div>';
+
+      echo '<div class="col-lg-6">';
+      echo '<div class="mb-3">';
+      echo '<label class="form-label fw-bold">' . __('Title') . ' (' . __('Browser tab title') . ')</label>';
       echo sprintf(
-         '<input type="text" %1$s />',
+         '<input type="text" class="form-control" %1$s />',
          Html::parseAttributes([
-            'name'  => 'page_title',
-            'value' => $this->fields['page_title'],
-            'style' => 'width: 98%',
+            'name'        => 'page_title',
+            'value'       => $this->fields['page_title'],
+            'placeholder' => 'Ex: GLPI Corporativo',
          ])
       );
-      echo "</td>";
-      echo "</tr>\n";
+      echo '<div class="form-text text-muted small">' . __('Replaces the GLPI word in browser tab title.') . '</div>';
+      echo '</div>';
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . t_trademark('Footer') . "</td>";
-      echo "<td colspan='3'>";
+      echo '<div class="mb-3">';
+      echo '<label class="form-label fw-bold">' . t_trademark('Footer') . '</label>';
       Dropdown::showFromArray('page_footer_display', [
          'original' => __('Original'),
          'hide'     => t_trademark('Hide'),
          'custom'   => t_trademark('Custom'),
-      ], ['value' => $this->fields['page_footer_display']]);
-      echo "</td>";
-      echo "</tr>\n";
+      ], [
+         'value'   => $this->fields['page_footer_display'],
+         'display' => true,
+      ]);
+      echo '</div>';
+      echo '</div>'; // .col-lg-6
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . t_trademark('Footer text') . "</td>";
-      echo "<td colspan='3'>";
+      echo '<div class="col-12">';
+      echo '<div class="mb-3">';
+      echo '<label class="form-label fw-bold">' . t_trademark('Footer text') . '</label>';
       Html::textarea([
          'rand'              => $rand,
          'editor_id'         => 'text' . $rand,
          'name'              => 'page_footer_text',
          'value'             => $this->fields['page_footer_text'],
-         'style'             => 'width: 98%',
-         'rows'              => 1,
+         'style'             => 'width: 100%',
+         'rows'              => 2,
          'enable_richtext'   => true,
          'enable_fileupload' => false,
          'enable_images'     => false,
@@ -408,47 +454,52 @@ class PluginTrademarkConfig extends CommonDBTM
       ?>
       <script type="text/javascript">
          $(document).ready(function() {
-            var editor = tinyMCE.get(<?php echo json_encode('text' . $rand) ?>);
-            editor.settings.force_br_newlines = true;
-            editor.settings.force_p_newlines = false;
-            editor.settings.forced_root_block = '';
+            if (typeof tinyMCE !== "undefined") {
+               var editor = tinyMCE.get(<?php echo json_encode('text' . $rand); ?>);
+               if (editor && editor.settings) {
+                  editor.settings.force_br_newlines = true;
+                  editor.settings.force_p_newlines = false;
+                  editor.settings.forced_root_block = '';
+               }
+            }
          });
       </script>
       <?php
-      echo "</td>";
-      echo "</tr>\n";
+      echo '</div>';
+      echo '</div>'; // .col-12
 
-      echo "</table>";
-      echo "</div>";
+      echo '</div>'; // .row
+      echo '</div>'; // #tab-trademark-favicon
 
-      // ── Login ─────────────────────────────────────────────────────────────────
-      echo "<div id='tab_trademark_login'>";
-      echo "<table class='tab_cadre_fixe'>";
+      // ────────────────────────────────────────────────────────────────────────
+      // ABA 2: Tela de Login
+      // ────────────────────────────────────────────────────────────────────────
+      echo '<div class="tab-pane fade" id="tab-trademark-login" role="tabpanel">';
+      echo '<div class="row g-4">';
 
-      echo "<tr class='noHover'><th colspan='4' >" . t_trademark('Login Page') . "</th></tr>";
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . t_trademark('Theme') . "</td>";
-      echo "<td colspan='2'>";
-      echo sprintf(
-         '<select %1$s>',
-         Html::parseAttributes(['name' => 'login_theme'])
-      );
+      // Seletor de Tema
+      echo '<div class="col-12">';
+      echo '<div class="card p-3 bg-body-tertiary border">';
+      echo '<div class="row align-items-center g-3">';
+      echo '<div class="col-md-3">';
+      echo '<label class="form-label m-0 fw-bold"><i class="ti ti-brush me-1 text-primary"></i>' . t_trademark('Theme') . '</label>';
+      echo '<div class="small text-muted">' . __('Select a predefined visual theme') . '</div>';
+      echo '</div>';
 
+      echo '<div class="col-md-7">';
+      echo sprintf('<select %1$s class="form-select">', Html::parseAttributes(['name' => 'login_theme']));
       echo '<option value="">GLPI (' . __('Original') . ')</option>';
       foreach (PluginTrademarkTheme::getLoginThemes() as $id => $theme) {
          $attrs = [
             'name'  => 'login_theme',
             'value' => $id,
          ];
-
          if (isset($theme['login-preview']) && $theme['login-preview']) {
             $attrs['data-preview'] = $theme['login-preview'];
          }
-
          if ($id === $this->fields['login_theme']) {
             $attrs['selected'] = 'selected';
          }
-
          echo sprintf(
             '<option %1$s>%2$s</option>',
             Html::parseAttributes($attrs),
@@ -465,7 +516,6 @@ class PluginTrademarkConfig extends CommonDBTM
                   html: '<img src="../plugins/trademark/pics/login.preview.png"/>&nbsp;' + theme.text
                });
             }
-
             return $('<span></span>', {
                html: '<img src="../plugins/trademark/themes/' + theme.id + '/' + data.preview + '"/>&nbsp;' + theme.text
             });
@@ -476,19 +526,21 @@ class PluginTrademarkConfig extends CommonDBTM
             width: '100%',
             selectionCssClass: 'trademark-themeselect-container',
             dropdownCssClass: 'trademark-themeselect-dropdown',
-            escapeMarkup: function(m) {
-               return m;
-            }
+            escapeMarkup: function(m) { return m; }
          });
       </script>
       <?php
-      echo "</td>";
-      echo "<td>";
-      echo '<a id="trademark-preview" href="#">' . __('Preview') . '</a>';
+      echo '</div>'; // .col-md-7
+
+      echo '<div class="col-md-2 text-md-end">';
+      echo '<button type="button" id="trademark-preview" class="btn btn-outline-primary d-inline-flex align-items-center gap-1 w-100 justify-content-center">';
+      echo '<i class="ti ti-external-link"></i>' . __('Preview');
+      echo '</button>';
       ?>
       <script type="text/javascript">
-         $('#trademark-preview').on('click', function() {
-            var url = <?php echo json_encode($CFG_GLPI['root_doc'] . "/index.php") ?>;
+         $('#trademark-preview').on('click', function(e) {
+            e.preventDefault();
+            var url = <?php echo json_encode($CFG_GLPI['root_doc'] . "/index.php"); ?>;
             url += '?noAUTO=1';
             var theme = $("select[name=login_theme]").val() || 'original';
             url += '&theme=' + encodeURIComponent(theme);
@@ -496,11 +548,18 @@ class PluginTrademarkConfig extends CommonDBTM
          });
       </script>
       <?php
-      echo "</td>";
-      echo "</tr>\n";
+      echo '</div>'; // .col-md-2
+      echo '</div>'; // .row
+      echo '</div>'; // .card
+      echo '</div>'; // .col-12
 
+      // Variáveis do Tema
       $themeInfo = PluginTrademarkTheme::getThemeInfo($this->fields['login_theme']);
       if ($themeInfo && isset($themeInfo['variables'])) {
+         echo '<div class="col-12">';
+         echo '<div class="card p-3 border shadow-none bg-body-tertiary">';
+         echo '<h5 class="fw-bold mb-3"><i class="ti ti-color-swatch me-1 text-primary"></i>' . __('Theme colors') . '</h5>';
+         echo '<div class="row g-3">';
          foreach ($themeInfo['variables'] as $k => $v) {
             $themeId    = $themeInfo['id'];
             $fieldName  = "login_theme-$themeId-$k";
@@ -508,118 +567,163 @@ class PluginTrademarkConfig extends CommonDBTM
             if (isset($this->fields[$fieldName]) && $this->fields[$fieldName]) {
                $fieldValue = $this->fields[$fieldName];
             }
-            echo "<tr class='tab_bg_1'>";
-            echo "<td>" . t_trademark($v['name']) . "</td>";
-            echo "<td>";
+            echo '<div class="col-md-4">';
+            echo '<label class="form-label small fw-semibold">' . t_trademark($v['name']) . '</label>';
+            echo '<div class="d-flex align-items-center gap-2">';
             Html::showColorField($fieldName, ['value' => $fieldValue]);
-            echo "&nbsp;";
-            echo Html::getCheckbox([
-               'title' => t_trademark('Reset'),
-               'name'  => "_blank_$fieldName",
-            ]);
-            echo "&nbsp;" . t_trademark('Reset');
-            echo "</td>";
-            echo "<td></td>";
-            echo "<td></td>";
-            echo "</tr>\n";
+            echo '<div class="form-check form-switch m-0">';
+            echo '<input class="form-check-input" type="checkbox" name="_blank_' . $fieldName . '" id="_blank_' . $fieldName . '" value="1">';
+            echo '<label class="form-check-label text-muted small" for="_blank_' . $fieldName . '">' . t_trademark('Reset') . '</label>';
+            echo '</div>';
+            echo '</div>';
+            echo '</div>';
          }
+         echo '</div>'; // .row
+         echo '</div>'; // .card
+         echo '</div>'; // .col-12
       }
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __('Picture') . "</td>";
-      $this->buildPictureLine('login_picture', '145px x 80px');
-      echo "</tr>\n";
+      // Imagem do Logo de Login
+      echo '<div class="col-lg-6">';
+      $this->renderPictureField('login_picture', __('Login Logo') . ' (' . __('Picture') . ')', '145px x 80px');
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __('Width') . "</td>";
-      echo "<td>";
+      echo '<div class="row g-2">';
+      echo '<div class="col-6">';
+      echo '<label class="form-label small fw-semibold">' . __('Max Width') . '</label>';
       echo sprintf(
-         '<input type="text" %1$s />',
+         '<input type="text" class="form-control form-control-sm font-monospace" %1$s />',
          Html::parseAttributes([
             'name'  => 'login_picture_max_width',
             'value' => $this->fields['login_picture_max_width'],
          ])
       );
-      echo "</td>";
-      echo "<td>" . __('Height') . "</td>";
-      echo "<td>";
+      echo '</div>';
+
+      echo '<div class="col-6">';
+      echo '<label class="form-label small fw-semibold">' . __('Max Height') . '</label>';
       echo sprintf(
-         '<input type="text" %1$s />',
+         '<input type="text" class="form-control form-control-sm font-monospace" %1$s />',
          Html::parseAttributes([
             'name'  => 'login_picture_max_height',
             'value' => $this->fields['login_picture_max_height'],
          ])
       );
-      echo "</td>";
-      echo "</tr>\n";
+      echo '</div>';
+      echo '</div>'; // .row
+      echo '</div>'; // .col-lg-6
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . t_trademark('Background picture') . "</td>";
-      $this->buildPictureLine('login_background_picture', '1920px x 1080px');
-      echo "</tr>\n";
+      // Fundo de Login
+      echo '<div class="col-lg-6">';
+      $this->renderPictureField('login_background_picture', t_trademark('Background picture'), '1920px x 1080px');
+      echo '</div>';
 
-      $this->buildCssLine('login', t_trademark('Login Page'));
-      echo "</table>";
-      echo "</div>";
+      // Editor CSS Login
+      echo '<div class="col-12">';
+      $this->renderCssEditor('login', t_trademark('Login Page'));
+      echo '</div>';
 
-      // ── Página Interna ────────────────────────────────────────────────────────
-      echo "<div id='tab_trademark_internal'>";
-      echo "<table class='tab_cadre_fixe'>";
+      echo '</div>'; // .row
+      echo '</div>'; // #tab-trademark-login
 
-      echo "<tr class='noHover'><th colspan='4' >" . t_trademark('Internal Page') . "</th></tr>";
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __('Picture') . "</td>";
-      $this->buildPictureLine('internal_picture', '100px x 55px');
-      echo "</tr>\n";
+      // ────────────────────────────────────────────────────────────────────────
+      // ABA 3: Interface Interna
+      // ────────────────────────────────────────────────────────────────────────
+      echo '<div class="tab-pane fade" id="tab-trademark-internal" role="tabpanel">';
+      echo '<div class="row g-4">';
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __('Width') . "</td>";
-      echo "<td>";
+      echo '<div class="col-lg-7">';
+      $this->renderPictureField('internal_picture', __('Header Logo') . ' (' . __('Internal Page') . ')', '100px x 55px');
+      echo '</div>';
+
+      echo '<div class="col-lg-5">';
+      echo '<div class="card p-3 bg-body-tertiary border">';
+      echo '<h5 class="fw-bold mb-3"><i class="ti ti-ruler-2 me-1 text-primary"></i>' . __('Logo Dimensions') . '</h5>';
+
+      echo '<div class="mb-3">';
+      echo '<label class="form-label small fw-semibold">' . __('Width') . '</label>';
       echo sprintf(
-         '<input type="text" %1$s />',
+         '<input type="text" class="form-control font-monospace" %1$s />',
          Html::parseAttributes([
             'name'  => 'internal_picture_width',
             'value' => $this->fields['internal_picture_width'],
          ])
       );
-      echo "</td>";
-      echo "<td>" . __('Height') . "</td>";
-      echo "<td>";
+      echo '</div>';
+
+      echo '<div class="mb-2">';
+      echo '<label class="form-label small fw-semibold">' . __('Height') . '</label>';
       echo sprintf(
-         '<input type="text" %1$s />',
+         '<input type="text" class="form-control font-monospace" %1$s />',
          Html::parseAttributes([
             'name'  => 'internal_picture_height',
             'value' => $this->fields['internal_picture_height'],
          ])
       );
-      echo "</td>";
-      echo "</tr>\n";
+      echo '</div>';
 
-      $this->buildCssLine('internal', t_trademark('Internal Page'));
-      echo "</table>";
-      echo "</div>";
+      echo '</div>'; // .card
+      echo '</div>'; // .col-lg-5
 
-      echo Html::scriptBlock("$('#tabs$rand').tabs({
-         activate: function(event, ui) {
-            localStorage['trademark_last_tab'] = $('#tabs$rand').tabs('option', 'active');
-            var editor = ui.newPanel.find('.trademark-codemirror').data('CodeMirrorInstance');
-            if (editor) {
-               editor.refresh();
-            }
-         },
-         active: localStorage['trademark_last_tab']
-      });");
+      // Editor CSS Interno
+      echo '<div class="col-12">';
+      $this->renderCssEditor('internal', t_trademark('Internal Page'));
+      echo '</div>';
 
+      echo '</div>'; // .row
+      echo '</div>'; // #tab-trademark-internal
+
+      echo '</div>'; // .card-body.tab-content
+
+      // ── Rodapé com Botão Salvar Corporativo ─────────────────────────────────
       if ($canedit) {
-         echo "<table class='tab_cadre_fixe'>";
-         echo "<tr class='tab_bg_2'>";
-         echo "<td colspan='4' class='center'>";
-         echo "<input type='submit' name='update' class='submit' value=\"" . _sx('button', 'Save') . "\">";
-         echo "</td></tr>";
-         echo "</table>";
+         echo '<div class="card-footer bg-body-tertiary d-flex align-items-center justify-content-between p-3 border-top">';
+         echo '<div class="text-muted small d-none d-sm-block">';
+         echo '<i class="ti ti-check text-success me-1"></i>' . __('Click save to apply your brand modifications.');
+         echo '</div>';
+         echo '<button type="submit" name="update" value="1" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4 shadow-sm">';
+         echo '<i class="ti ti-device-floppy fs-2"></i>';
+         echo '<span class="fw-semibold">' . _sx('button', 'Save') . '</span>';
+         echo '</button>';
+         echo '</div>';
       }
 
-      Html::closeForm();
+      echo '</div>'; // .card
+
+      if ($canedit) {
+         Html::closeForm();
+      }
+
+      // Script para persistência e refresh de CodeMirror nas abas Bootstrap 5
+      echo Html::scriptBlock('
+         $(function() {
+            var tabsContainer = document.getElementById("trademark-tabs-' . $rand . '");
+            if (tabsContainer) {
+               tabsContainer.querySelectorAll("button[data-bs-toggle=\'tab\']").forEach(function(tabBtn) {
+                  tabBtn.addEventListener("shown.bs.tab", function(event) {
+                     var targetSelector = event.target.getAttribute("data-bs-target");
+                     if (targetSelector) {
+                        localStorage.setItem("trademark_last_tab", targetSelector);
+                        $(targetSelector).find(".trademark-codemirror").each(function() {
+                           var cm = $(this).data("CodeMirrorInstance");
+                           if (cm) {
+                              cm.refresh();
+                           }
+                        });
+                     }
+                  });
+               });
+
+               var savedTab = localStorage.getItem("trademark_last_tab");
+               if (savedTab) {
+                  var targetBtn = tabsContainer.querySelector("button[data-bs-target=\'" + savedTab + "\']");
+                  if (targetBtn && typeof bootstrap !== "undefined" && bootstrap.Tab) {
+                     var bsTab = new bootstrap.Tab(targetBtn);
+                     bsTab.show();
+                  }
+               }
+            }
+         });
+      ');
 
       return true;
    }
