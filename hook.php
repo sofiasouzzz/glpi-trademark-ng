@@ -36,19 +36,19 @@ function plugin_trademark_display_login(): void
       $loginPicture = $themeInfo['login-logo'] . '&theme=' . $themeInfo['id'];
    }
 
-   // 3. URL do CSS — http_build_query garante codificação correta de todos os parâmetros.
-   //    C7: $_GET['theme'] e $_GET['nocache'] nunca são concatenados diretamente na URL.
-   $cssParams = ['_' => PluginTrademarkToolbox::getTimestamp()];
-   if ($theme !== null) {
-      $cssParams['theme'] = $theme; // já validado por regex acima
+   // 3. O CSS normal é carregado pelo hook de páginas anônimas.
+   //    Mantém uma folha adicional apenas para pré-visualização de tema ou nocache.
+   if ($theme !== null || isset($_GET['nocache'])) {
+      $cssParams = ['_' => PluginTrademarkToolbox::getTimestamp()];
+      if ($theme !== null) {
+         $cssParams['theme'] = $theme;
+      }
+      if (isset($_GET['nocache'])) {
+         $cssParams['nocache'] = 1;
+      }
+      $cssUrl = '/plugins/trademark/front/login.css.php?' . http_build_query($cssParams);
+      echo Html::css($cssUrl, ['version' => PLUGIN_TRADEMARK_VERSION]);
    }
-   if (isset($_GET['nocache'])) {
-      $cssParams['nocache'] = 1; // valor fixo, não repassa o valor bruto de $_GET
-   }
-   $cssUrl = '/plugins/trademark/front/login.css.php?' . http_build_query($cssParams);
-
-   // Output da tag <link> via helper do GLPI (gerencia versionamento de cache).
-   echo Html::css($cssUrl, ['version' => PLUGIN_TRADEMARK_VERSION]);
 
    // 4. Dados do logo (sobrescrita de marca).
    $pictureUrl = null;

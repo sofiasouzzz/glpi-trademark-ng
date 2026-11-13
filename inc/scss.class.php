@@ -42,7 +42,11 @@ class PluginTrademarkScss {
 
       $content = str_replace('\"', '"', $content);
 
-      $ckey = md5($content . json_encode($variables));
+      $cacheVariables = array_map(
+         fn($value) => $value instanceof \ScssPhp\ScssPhp\Value\Value ? (string) $value : $value,
+         $variables
+      );
+      $ckey = md5($content . json_encode($cacheVariables));
 
       if ($GLPI_CACHE && $GLPI_CACHE->has($ckey) && !isset($_GET['reload']) && !isset($_GET['nocache'])) {
          $css = $GLPI_CACHE->get($ckey);
@@ -91,32 +95,36 @@ class PluginTrademarkScss {
       $css_custom = PluginTrademarkConfig::getConfig("login_css_custom", '');
 
       $css_custom = html_entity_decode($css_custom);
+      $themeVariables = [];
+      if ($themeInfo && isset($themeInfo['variables'])) {
+         foreach ($themeInfo['variables'] as $k => $v) {
+            $themeId = $themeInfo['id'];
+            $fieldName = "login_theme-$themeId-$k";
+            $fieldValue = PluginTrademarkConfig::getConfig($fieldName, $v['default']);
+            $themeVariables[$k] = \ScssPhp\ScssPhp\ValueConverter::parseValue((string) $fieldValue);
+         }
+      }
 
       if ($css_type === 'scss' && PluginTrademarkScss::hasScssSuport()) {
-         $variables = [];
-         if ($themeInfo && isset($themeInfo['variables'])) {
-            foreach ($themeInfo['variables'] as $k => $v) {
-               $themeId = $themeInfo['id'];
-               $fieldName = "login_theme-$themeId-$k";
-               $fieldValue = PluginTrademarkConfig::getConfig($fieldName, $v['default']);
-               $variables[$k] = $fieldValue;
-            }
-         }
-
          if ($themeInfo && isset($themeInfo['login-scss'])) {
             $scssPath = str_replace('\\', '/', $themeInfo['path'] . '/' . $themeInfo['login-scss']);
             $css_custom = "@import '" . $scssPath . "';\n" . $css_custom;
          }
 
-         $variables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
+         $themeVariables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
 
          try {
-            $css .= PluginTrademarkScss::compileScss($css_custom, $variables);
+            $css .= PluginTrademarkScss::compileScss($css_custom, $themeVariables);
          } catch (\Throwable $th) {
             \Glpi\Application\ErrorHandler::getInstance()->handleException($th);
          }
       } else {
-         if ($themeInfo && isset($themeInfo['login-css'])) {
+         if ($themeInfo && isset($themeInfo['login-scss'])) {
+            $css .= PluginTrademarkScss::compileScss(
+               "@import '" . str_replace('\\', '/', $themeInfo['path'] . '/' . $themeInfo['login-scss']) . "';",
+               $themeVariables
+            ) . "\n";
+         } elseif ($themeInfo && isset($themeInfo['login-css'])) {
             $css .= file_get_contents($themeInfo['path'] . '/' . $themeInfo['login-css']) . "\n";
          }
 

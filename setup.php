@@ -45,6 +45,7 @@ function plugin_init_trademark() {
 
       $assetVersion = PluginTrademarkToolbox::getTimestamp();
       $PLUGIN_HOOKS["add_css"]['trademark'] = 'front/internal.css.php?_=' . $assetVersion;
+      $PLUGIN_HOOKS['add_css_anonymous_page']['trademark'] = 'front/login.css.php?_=' . $assetVersion;
       $PLUGIN_HOOKS["add_javascript"]['trademark'] = 'front/internal.js.php?_=' . $assetVersion;
 
       $CFG_GLPI['javascript']['config']['config'][] = 'codemirror';

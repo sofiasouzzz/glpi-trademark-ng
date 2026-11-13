@@ -46,6 +46,28 @@ try {
    $css = '';
 }
 
+$activeTheme = $theme ?: PluginTrademarkConfig::getConfig('login_theme', '');
+$themeInfo   = $activeTheme ? PluginTrademarkTheme::getThemeInfo($activeTheme) : null;
+$loginPicture = PluginTrademarkConfig::getConfig('login_picture', '');
+if (!$loginPicture && $themeInfo && isset($themeInfo['login-logo'])) {
+   $loginPicture = $themeInfo['login-logo'] . '&theme=' . $themeInfo['id'];
+}
+
+if ($loginPicture) {
+   $pictureUrl = PluginTrademarkToolbox::getPictureUrl($loginPicture);
+   $rawWidth   = PluginTrademarkConfig::getConfig('login_picture_max_width', '145px');
+   $rawHeight  = PluginTrademarkConfig::getConfig('login_picture_max_height', '80px');
+   $cssDim     = '/^\d+(\.\d+)?(px|em|rem|%|vh|vw)$/';
+   $maxWidth   = preg_match($cssDim, $rawWidth) ? $rawWidth : '145px';
+   $maxHeight  = preg_match($cssDim, $rawHeight) ? $rawHeight : '80px';
+   $css       .= '.page-anonymous .glpi-logo{'
+      . '--logo:url("' . $pictureUrl . '");'
+      . 'content:url("' . $pictureUrl . '");'
+      . 'width:auto;height:auto;'
+      . 'max-width:' . $maxWidth . ';max-height:' . $maxHeight . ';'
+      . '}';
+}
+
 header('Content-Type: text/css; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 
