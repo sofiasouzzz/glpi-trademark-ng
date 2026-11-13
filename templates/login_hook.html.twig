@@ -1,0 +1,95 @@
+{#
+   Login hook template — Trademark plugin
+   Rendered by plugin_trademark_display_login() in hook.php.
+
+   All variables are sanitized/validated in PHP before being passed here.
+   Twig auto-escaping is ON (HTML context).
+
+   Variables:
+     picture_url    string|null  URL of the logo override image (internally generated, safe for |raw in CSS)
+     max_width      string       CSS max-width for the logo — pre-validated format: \d+(px|em|rem|%|vh|vw)
+     max_height     string       CSS max-height for the logo — pre-validated format
+     login_label    string       Translated placeholder for the login field
+     password_label string       Translated placeholder for the password field
+     favicon_url    string|null  URL of the favicon override (internally generated)
+     page_title     string       Custom page title (empty string = no override)
+     footer_display string       'original' | 'hide' | 'custom'
+     footer_text    string       Processed safe HTML (only used when footer_display = 'custom')
+#}
+
+{# ── Logo override ─────────────────────────────────────────────────────────── #}
+{% if picture_url %}
+<style>
+   .page-anonymous .glpi-logo {
+      {#
+         picture_url is generated internally by PluginTrademarkToolbox::getPictureUrl()
+         and may contain '&' in the query string, which Twig's HTML auto-escape would
+         turn into '&amp;', breaking the CSS url(). Using |raw is intentional and safe
+         because the value never comes from untrusted user input.
+      #}
+      --logo: url("{{ picture_url | raw }}");
+      content: url("{{ picture_url | raw }}");
+      width: auto;
+      height: auto;
+      max-width: {{ max_width }};
+      max-height: {{ max_height }};
+   }
+</style>
+{% endif %}
+
+{# ── Behaviour script ──────────────────────────────────────────────────────── #}
+{#
+   Values that go into JS string literals are always passed through json_encode
+   (which produces a quoted, escaped JSON value) and then |raw so Twig does not
+   double-escape the result. This is the standard safe pattern for inline JS.
+#}
+<script>
+(function () {
+   'use strict';
+
+   {# Login / password placeholders #}
+   var loginInput = document.getElementById('login_name');
+   if (loginInput) {
+      loginInput.setAttribute('placeholder', {{ login_label | json_encode | raw }});
+   }
+   document.querySelectorAll('input[type="password"]').forEach(function (el) {
+      el.setAttribute('placeholder', {{ password_label | json_encode | raw }});
+   });
+
+   {% if favicon_url %}
+   {# Favicon override — favicon_url is internally generated, json_encode makes it JS-safe #}
+   var iconLink = document.querySelector('link[rel*="icon"]');
+   if (iconLink) {
+      iconLink.removeAttribute('type');
+      iconLink.setAttribute('href', {{ favicon_url | json_encode | raw }});
+   }
+   {% endif %}
+
+   {% if page_title %}
+   {# Page title override #}
+   if (document.title) {
+      document.title = document.title.replace('GLPI', {{ page_title | json_encode | raw }});
+   }
+   {% endif %}
+
+   {% if footer_display == 'hide' %}
+   {# Footer: hide #}
+   document.addEventListener('DOMContentLoaded', function () {
+      var footer = document.getElementById('footer-login');
+      if (footer) {
+         footer.style.display = 'none';
+      }
+   });
+
+   {% elseif footer_display == 'custom' %}
+   {# Footer: custom HTML — footer_text is already processed by RichText::getEnhancedHtml() #}
+   document.addEventListener('DOMContentLoaded', function () {
+      var cp = document.querySelector('a.copyright');
+      if (cp && cp.parentElement) {
+         cp.parentElement.innerHTML = {{ footer_text | json_encode | raw }};
+      }
+   });
+   {% endif %}
+
+}());
+</script>
