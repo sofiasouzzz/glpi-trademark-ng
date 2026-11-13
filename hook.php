@@ -1,109 +1,107 @@
 <?php
 
-function plugin_trademark_display_login() {
+use Glpi\Application\View\TemplateRenderer;
 
-   $themeInfo = null;
-   if (isset($_GET['theme'])) {
-      $themeInfo = PluginTrademarkTheme::getThemeInfo($_GET['theme']);
+/**
+ * Hook: injeta CSS e comportamentos na tela de login do GLPI.
+ *
+ * Segurança:
+ *  - $theme: validado por regex antes de qualquer uso (evita path traversal).
+ *  - URL do CSS construída com http_build_query() — sem concatenação manual de $_GET.
+ *  - max-width/max-height: validados como dimensões CSS antes de passar ao template.
+ *  - HTML/JS gerado pelo template Twig com auto-escaping ativo.
+ */
+function plugin_trademark_display_login(): void
+{
+   // 1. Resolve o tema — aceita apenas nomes alfanuméricos seguros.
+   $theme = null;
+   if (
+      isset($_GET['theme'])
+      && is_string($_GET['theme'])
+      && preg_match('/^[A-Za-z0-9_-]{1,64}$/', $_GET['theme'])
+   ) {
+      $theme = $_GET['theme'];
    }
+
+   $themeInfo = $theme ? PluginTrademarkTheme::getThemeInfo($theme) : null;
    if (!$themeInfo) {
-      $theme = PluginTrademarkConfig::getConfig("login_theme", '');
-      $themeInfo = PluginTrademarkTheme::getThemeInfo($theme);
+      $savedTheme = PluginTrademarkConfig::getConfig('login_theme', '');
+      $themeInfo  = PluginTrademarkTheme::getThemeInfo($savedTheme);
    }
 
+   // 2. Imagem do logo de login.
    $loginPicture = PluginTrademarkConfig::getConfig('login_picture');
-
-   if (!$loginPicture && $themeInfo && isset($themeInfo['login-background'])) {
+   if (!$loginPicture && $themeInfo && isset($themeInfo['login-logo'])) {
+      // 'id' vem de getThemeInfo() que usa o nome do diretório validado no passo 1.
       $loginPicture = $themeInfo['login-logo'] . '&theme=' . $themeInfo['id'];
    }
 
-   if ($loginPicture && version_compare(GLPI_VERSION, '9.5.0', '<')) {
-      echo Html::css("/plugins/trademark/css/login.base.css", [
-         'version' => PLUGIN_TRADEMARK_VERSION,
-      ]);
-   }
-
-   $timestamp = PluginTrademarkToolbox::getTimestamp();
-
-   $cssUrl = "/plugins/trademark/front/login.css.php?_=$timestamp";
-
-   if (isset($_GET['theme'])) {
-      $cssUrl .= "&theme=" . $_GET['theme'];
+   // 3. URL do CSS — http_build_query garante codificação correta de todos os parâmetros.
+   //    C7: $_GET['theme'] e $_GET['nocache'] nunca são concatenados diretamente na URL.
+   $cssParams = ['_' => PluginTrademarkToolbox::getTimestamp()];
+   if ($theme !== null) {
+      $cssParams['theme'] = $theme; // já validado por regex acima
    }
    if (isset($_GET['nocache'])) {
-      $cssUrl .= "&nocache=" . $_GET['nocache'];
+      $cssParams['nocache'] = 1; // valor fixo, não repassa o valor bruto de $_GET
+   }
+   $cssUrl = '/plugins/trademark/front/login.css.php?' . http_build_query($cssParams);
+
+   // Output da tag <link> via helper do GLPI (gerencia versionamento de cache).
+   echo Html::css($cssUrl, ['version' => PLUGIN_TRADEMARK_VERSION]);
+
+   // 4. Dados do logo (sobrescrita de marca).
+   $pictureUrl = null;
+   $maxWidth   = '145px';
+   $maxHeight  = '80px';
+   if ($loginPicture) {
+      $pictureUrl = PluginTrademarkToolbox::getPictureUrl($loginPicture);
+
+      // Valida que os valores de tamanho são dimensões CSS seguras antes de passar ao template.
+      $rawWidth  = PluginTrademarkConfig::getConfig('login_picture_max_width', '145px');
+      $rawHeight = PluginTrademarkConfig::getConfig('login_picture_max_height', '80px');
+      $cssDim    = '/^\d+(\.\d+)?(px|em|rem|%|vh|vw)$/';
+      $maxWidth  = preg_match($cssDim, $rawWidth)  ? $rawWidth  : '145px';
+      $maxHeight = preg_match($cssDim, $rawHeight) ? $rawHeight : '80px';
    }
 
-   echo Html::css($cssUrl, [
-      'version' => PLUGIN_TRADEMARK_VERSION,
-   ]);
+   // 5. Favicon.
+   $faviconPicture = PluginTrademarkConfig::getConfig('favicon_picture');
+   $faviconUrl     = $faviconPicture
+      ? PluginTrademarkToolbox::getPictureUrl($faviconPicture)
+      : null;
 
-   ?>
-   <?php if ($loginPicture) : ?>
-      <?php
-      $pictureUrl = PluginTrademarkToolbox::getPictureUrl($loginPicture);
-      $maxWidth = PluginTrademarkConfig::getConfig('login_picture_max_width', '145px');
-      $maxHeight = PluginTrademarkConfig::getConfig('login_picture_max_height', '80px');
-      ?>
-      <style>
-         .page-anonymous .glpi-logo {
-            --logo: url(<?php echo $pictureUrl ?>);
-            content: url(<?php echo $pictureUrl ?>);
-            width: auto;
-            height: auto;
-            max-width: <?php echo $maxWidth ?>px;
-            max-height: <?php echo $maxHeight ?>px;
-         }
-      </style>
-   <?php endif; ?>
-   <script type="text/javascript">
-      $('#login_name').attr('placeholder', <?php echo json_encode(__('Login')) ?>);
-      $('input[type=password]').attr('placeholder', <?php echo json_encode(__('Password')) ?>);
-      $('input[type=password]').after($('.form-label-description'));
-   <?php
-   $favicon = PluginTrademarkConfig::getConfig('favicon_picture');
-   if ($favicon) :
-      $faviconUrl = PluginTrademarkToolbox::getPictureUrl($favicon);
-      ?>
-         var $icon = $('link[rel*=icon]');
-         $icon.attr('type', null);
-         $icon.attr('href', <?php echo json_encode($faviconUrl) ?>);
-      <?php
-      endif;
-   $pageTitle = PluginTrademarkConfig::getConfig('page_title');
-   if ($pageTitle) :
-      ?>
-         var $title = $('title');
-         var newTitle = $title.text().replace('GLPI', <?php echo json_encode($pageTitle) ?>);
-         $title.text(newTitle);
-      <?php
-      endif;
+   // 6. Título da página e rodapé.
+   $pageTitle     = PluginTrademarkConfig::getConfig('page_title', '');
    $footerDisplay = PluginTrademarkConfig::getConfig('page_footer_display', 'original');
-   $footerText = PluginTrademarkConfig::getConfig('page_footer_text', '');
-   if ($footerDisplay === 'hide') :
-      ?>
-         $(function() {
-            $('#footer-login').hide();
-         });
-      <?php
-      endif;
-   if ($footerDisplay === 'custom') :
-      $footerText = \Glpi\RichText\RichText::getEnhancedHtml($footerText);
-      ?>
-         $(function() {
-            $('a.copyright').parent().html(<?php echo json_encode($footerText) ?>);
-         });
-      <?php
-      endif;
-   ?>
-   </script>
-   <?php
+   $footerText    = '';
+   if ($footerDisplay === 'custom') {
+      $footerText = \Glpi\RichText\RichText::getEnhancedHtml(
+         PluginTrademarkConfig::getConfig('page_footer_text', '')
+      );
+   }
+
+   // 7. Renderiza HTML/JS via Twig (C6).
+   //    O auto-escaping do Twig protege contra XSS; valores em JS usam json_encode no template.
+   TemplateRenderer::getInstance()->display('@trademark/login_hook.html.twig', [
+      'picture_url'    => $pictureUrl,
+      'max_width'      => $maxWidth,
+      'max_height'     => $maxHeight,
+      'login_label'    => __('Login'),
+      'password_label' => __('Password'),
+      'favicon_url'    => $faviconUrl,
+      'page_title'     => $pageTitle,
+      'footer_display' => $footerDisplay,
+      'footer_text'    => $footerText,
+   ]);
 }
 
-function plugin_trademark_install() {
+function plugin_trademark_install(): bool
+{
    return true;
 }
 
-function plugin_trademark_uninstall() {
+function plugin_trademark_uninstall(): bool
+{
    return true;
 }

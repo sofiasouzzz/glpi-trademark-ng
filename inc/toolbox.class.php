@@ -2,7 +2,7 @@
 
 class PluginTrademarkToolbox {
 
-   static public function getTimestamp() {
+   public static function getTimestamp() {
       global $GLPI_CACHE;
 
       if (!$GLPI_CACHE) {
@@ -17,7 +17,7 @@ class PluginTrademarkToolbox {
       return $timestamp;
    }
 
-   static public function setTimestamp($timestamp = null) {
+   public static function setTimestamp($timestamp = null) {
       global $GLPI_CACHE;
 
       if (!$timestamp) {
@@ -34,12 +34,12 @@ class PluginTrademarkToolbox {
       $GLPI_CACHE->set('trademark_timestamp', $timestamp);
    }
 
-   static public function startsWith($haystack, $needle) {
+   public static function startsWith($haystack, $needle) {
       $length = strlen($needle);
       return (substr($haystack, 0, $length) === $needle);
    }
 
-   static function getPictureUrl($path) {
+   public static function getPictureUrl($path) {
       global $CFG_GLPI;
 
       if (empty($path)) {
@@ -49,10 +49,10 @@ class PluginTrademarkToolbox {
       return Html::getPrefixedUrl('/plugins/trademark/front/picture.send.php?path=' . $path);
    }
 
-   static public function savePicture($src, $uniq_prefix = null) {
+   public static function savePicture($src, $uniq_prefix = null) {
       $basePath = GLPI_PLUGIN_DOC_DIR . "/trademark";
 
-      if (function_exists('Document::isPicture') && !Document::isPicture($src)) {
+      if (method_exists(Document::class, 'isImage') && !Document::isImage($src)) {
          return false;
       }
 
@@ -115,7 +115,7 @@ class PluginTrademarkToolbox {
     *
     * @return boolean
     **/
-   static function resizePicture(
+   public static function resizePicture(
       $source_path,
       $dest_path,
       $new_width = 71,

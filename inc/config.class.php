@@ -1,12 +1,15 @@
 <?php
 
-class PluginTrademarkConfig extends CommonDBTM {
+class PluginTrademarkConfig extends CommonDBTM
+{
+   private static ?array $_cache = null;
+   private static int $_i = 1;
 
-   private static $_cache = null;
-   private static $_i = 1;
-
-   static function getConfig($name, $defaultValue = null) {
-
+   /**
+    * Lê um valor de configuração do plugin (com cache em memória por request).
+    */
+   public static function getConfig(string $name, mixed $defaultValue = null): mixed
+   {
       if (self::$_cache === null) {
          $config = new self();
          $config->getEmpty();
@@ -21,7 +24,10 @@ class PluginTrademarkConfig extends CommonDBTM {
       return $defaultValue;
    }
 
-   function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
+   // Assinaturas sem tipos adicionais para manter compatibilidade com CommonGLPI do GLPI 12,
+   // que declara getTabNameForItem e displayTabContentForItem sem tipos no $withtemplate.
+   public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
+   {
       switch (get_class($item)) {
          case 'Config':
             return [1 => t_trademark('Trademark')];
@@ -30,7 +36,8 @@ class PluginTrademarkConfig extends CommonDBTM {
       }
    }
 
-   static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
+   public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0): bool
+   {
       switch (get_class($item)) {
          case 'Config':
             $config = new self();
@@ -40,10 +47,16 @@ class PluginTrademarkConfig extends CommonDBTM {
       return true;
    }
 
-   protected static function checkPicture($name, $input, $old, $width = 0, $height = 0, $max_size = 500) {
-
+   protected static function checkPicture(
+      string $name,
+      array $input,
+      array $old,
+      int $width = 0,
+      int $height = 0,
+      int $max_size = 500
+   ): array {
       $blank = "_blank_$name";
-      $new = "_$name";
+      $new   = "_$name";
 
       if (isset($input[$blank]) && $input[$blank]) {
          unset($input[$blank]);
@@ -51,9 +64,9 @@ class PluginTrademarkConfig extends CommonDBTM {
             PluginTrademarkToolbox::deletePicture($old[$name]);
          }
          $input[$name] = '';
-      } else if (isset($input[$new]) && !empty($input[$new]) && !empty($input[$new][0])) {
-         $picName = array_shift($input[$new]);
-         $picPath = GLPI_TMP_DIR . '/' . $picName;
+      } elseif (isset($input[$new]) && !empty($input[$new]) && !empty($input[$new][0])) {
+         $picName        = array_shift($input[$new]);
+         $picPath        = GLPI_TMP_DIR . '/' . $picName;
          $picResizedPath = GLPI_TMP_DIR . '/resized_' . $picName;
 
          if ($width || $height) {
@@ -73,22 +86,25 @@ class PluginTrademarkConfig extends CommonDBTM {
          }
       }
 
-      unset($input["_$name"]);
-      unset($input["_prefix_$name"]);
-      unset($input["_prefix_new_$name"]);
-      unset($input["_tag_$name"]);
-      unset($input["_tag_new_$name"]);
-      unset($input["_uploader_$name"]);
-      unset($input["new_$name"]);
-      unset($input[$blank]);
-      unset($input[$new]);
+      unset(
+         $input["_$name"],
+         $input["_prefix_$name"],
+         $input["_prefix_new_$name"],
+         $input["_tag_$name"],
+         $input["_tag_new_$name"],
+         $input["_uploader_$name"],
+         $input["new_$name"],
+         $input[$blank],
+         $input[$new]
+      );
 
       return $input;
    }
 
-   protected static function checkCSS($name, $label, $input, $old) {
+   protected static function checkCSS(string $name, string $label, array $input, array $old): array
+   {
       $fullName = "{$name}_css_custom";
-      $type = "{$name}_css_type";
+      $type     = "{$name}_css_type";
 
       if (!isset($input[$type])) {
          $input[$type] = 'css';
@@ -101,9 +117,8 @@ class PluginTrademarkConfig extends CommonDBTM {
 
          if ($input[$type] === 'scss' && PluginTrademarkScss::hasScssSuport()) {
             try {
-               $variables = [];
+               $variables                       = [];
                $variables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
-
                PluginTrademarkScss::compileScss($input[$fullName], $variables);
             } catch (\Throwable $th) {
                $message = sprintf(t_trademark('Unable to compile the SCSS (%1$s). Message: '), $label);
@@ -115,7 +130,8 @@ class PluginTrademarkConfig extends CommonDBTM {
       return $input;
    }
 
-   static function configUpdate($input) {
+   public static function configUpdate(array $input): array
+   {
       $old = Config::getConfigurationValues('trademark');
 
       unset($input['_no_history']);
@@ -130,7 +146,7 @@ class PluginTrademarkConfig extends CommonDBTM {
 
       foreach ($input as $key => $value) {
          if ($value && strpos($key, '_blank_') === 0) {
-            $name = substr($key, 7);
+            $name        = substr($key, 7);
             $input[$name] = '';
          }
       }
@@ -144,8 +160,8 @@ class PluginTrademarkConfig extends CommonDBTM {
       return $input;
    }
 
-   function getEmpty() {
-
+   public function getEmpty(): bool
+   {
       $defaultCss = 'css';
 
       if (PluginTrademarkScss::hasScssSuport()) {
@@ -153,25 +169,28 @@ class PluginTrademarkConfig extends CommonDBTM {
       }
 
       $this->fields = [
-         'favicon_picture' => '',
-         'page_title' => '',
-         'page_footer_display' => 'original',
-         'page_footer_text' => '',
-         'login_picture' => '',
-         'login_picture_max_width' => '240px',
-         'login_picture_max_height' => '130px',
-         'login_css_custom' => '',
-         'login_css_type' => $defaultCss,
-         'login_theme' => '',
-         'internal_picture' => '',
-         'internal_picture_width' => '100px',
-         'internal_picture_height' => '55px',
-         'internal_css_custom' => '',
-         'internal_css_type' => $defaultCss,
+         'favicon_picture'           => '',
+         'page_title'                => '',
+         'page_footer_display'       => 'original',
+         'page_footer_text'          => '',
+         'login_picture'             => '',
+         'login_picture_max_width'   => '240px',
+         'login_picture_max_height'  => '130px',
+         'login_css_custom'          => '',
+         'login_css_type'            => $defaultCss,
+         'login_theme'               => '',
+         'internal_picture'          => '',
+         'internal_picture_width'    => '100px',
+         'internal_picture_height'   => '55px',
+         'internal_css_custom'       => '',
+         'internal_css_type'         => $defaultCss,
       ];
+
+      return true;
    }
 
-   protected function buildPictureLine($name, $recommendedSize = null) {
+   protected function buildPictureLine(string $name, ?string $recommendedSize = null): void
+   {
       if (!empty($this->fields[$name])) {
          echo '<td>';
          echo Html::image(PluginTrademarkToolbox::getPictureUrl($this->fields[$name]), [
@@ -181,12 +200,12 @@ class PluginTrademarkConfig extends CommonDBTM {
                background-image: linear-gradient(45deg, #b0b0b0 25%, transparent 25%), linear-gradient(-45deg, #b0b0b0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #b0b0b0 75%), linear-gradient(-45deg, transparent 75%, #b0b0b0 75%);
                background-size: 10px 10px;
                background-position: 0 0, 0 5px, 5px -5px, -5px 0px;',
-            'class' => 'picture_square'
+            'class' => 'picture_square',
          ]);
          echo "&nbsp;";
          echo Html::getCheckbox([
             'title' => t_trademark('Reset'),
-            'name'  => "_blank_$name"
+            'name'  => "_blank_$name",
          ]);
          echo "&nbsp;" . t_trademark('Reset');
          echo '</td>';
@@ -195,8 +214,8 @@ class PluginTrademarkConfig extends CommonDBTM {
          echo '<td colspan="3">';
       }
       Html::file([
-         'name'       => $name,
-         'onlyimages' => true,
+         'name'          => $name,
+         'onlyimages'    => true,
          'min_file_size' => 1,
       ]);
       if ($recommendedSize) {
@@ -207,9 +226,10 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo '</td>';
    }
 
-   protected function buildCssLine($name, $label) {
+   protected function buildCssLine(string $name, string $label): void
+   {
       $fullName = "{$name}_css_custom";
-      $type = "{$name}_css_type";
+      $type     = "{$name}_css_type";
 
       echo "<tr><th colspan='4'>" . sprintf(t_trademark('Custom CSS for %1$s'), $label) . "</th></tr>";
       echo "<tr class='tab_bg_1'>";
@@ -236,8 +256,8 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo sprintf(
          '<textarea %1$s>',
          Html::parseAttributes([
-            'id' => $fullName . '_' . $rand,
-            'name' => $fullName,
+            'id'    => $fullName . '_' . $rand,
+            'name'  => $fullName,
             'class' => 'trademark-codemirror',
          ])
       );
@@ -269,18 +289,17 @@ class PluginTrademarkConfig extends CommonDBTM {
    }
 
    /**
-    * Print the config form for display
-    *
-    * @return Nothing (display)
-    * */
-   function showFormDisplay() {
+    * Exibe o formulário de configuração do plugin na aba Configuração > Trademark.
+    */
+   public function showFormDisplay(): bool
+   {
       global $CFG_GLPI;
+
       if (!Config::canView()) {
          return false;
       }
 
       $this->getEmpty();
-
       $this->fields = array_merge($this->fields, Config::getConfigurationValues('trademark'));
 
       $canedit = Session::haveRight(Config::$rightname, UPDATE);
@@ -337,18 +356,11 @@ class PluginTrademarkConfig extends CommonDBTM {
       }
       </style>";
 
-      // echo "<div id='tabs$rand' class='center tab_cadre_fixe horizontal trademark ui-tabs ui-corner-all ui-widget ui-widget-content'>";
-      // echo "<ul role='tablist' class='ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header'>";
-      // echo "<li><a href='#tab_trademark_favicon'>" . t_trademark('Favicon and Title') . "</a></li>";
-      // echo "<li><a href='#tab_trademark_login'>" . t_trademark('Login Page') . "</a></li>";
-      // echo "<li><a href='#tab_trademark_internal'>" . t_trademark('Internal Page') . "</a></li>";
-      // echo "</ul>";
-
-      // General
+      // ── Geral (Favicon + Título) ──────────────────────────────────────────────
       echo "<div id='tab_trademark_favicon'>";
       echo "<table class='tab_cadre_fixe'>";
 
-      echo  "<tr class='noHover'><th colspan='4' >" . t_trademark('Favicon and Title') . "</th></tr>";
+      echo "<tr class='noHover'><th colspan='4' >" . t_trademark('Favicon and Title') . "</th></tr>";
       echo "<tr class='tab_bg_1'>";
       echo "<td>" . __('Picture') . "</td>";
       $this->buildPictureLine('favicon_picture', '192px x 192px');
@@ -360,7 +372,7 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo sprintf(
          '<input type="text" %1$s />',
          Html::parseAttributes([
-            'name' => 'page_title',
+            'name'  => 'page_title',
             'value' => $this->fields['page_title'],
             'style' => 'width: 98%',
          ])
@@ -373,8 +385,8 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo "<td colspan='3'>";
       Dropdown::showFromArray('page_footer_display', [
          'original' => __('Original'),
-         'hide' => t_trademark('Hide'),
-         'custom' => t_trademark('Custom'),
+         'hide'     => t_trademark('Hide'),
+         'custom'   => t_trademark('Custom'),
       ], ['value' => $this->fields['page_footer_display']]);
       echo "</td>";
       echo "</tr>\n";
@@ -383,15 +395,15 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo "<td>" . t_trademark('Footer text') . "</td>";
       echo "<td colspan='3'>";
       Html::textarea([
-         'rand' => $rand,
-         'editor_id' => 'text' . $rand,
-         'name' => 'page_footer_text',
-         'value' => $this->fields['page_footer_text'],
-         'style' => 'width: 98%',
-         'rows' => 1,
-         'enable_richtext' => true,
+         'rand'              => $rand,
+         'editor_id'         => 'text' . $rand,
+         'name'              => 'page_footer_text',
+         'value'             => $this->fields['page_footer_text'],
+         'style'             => 'width: 98%',
+         'rows'              => 1,
+         'enable_richtext'   => true,
          'enable_fileupload' => false,
-         'enable_images' => false,
+         'enable_images'     => false,
       ]);
       ?>
       <script type="text/javascript">
@@ -409,25 +421,23 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo "</table>";
       echo "</div>";
 
-      // Login
+      // ── Login ─────────────────────────────────────────────────────────────────
       echo "<div id='tab_trademark_login'>";
       echo "<table class='tab_cadre_fixe'>";
 
-      echo  "<tr class='noHover'><th colspan='4' >" . t_trademark('Login Page') . "</th></tr>";
+      echo "<tr class='noHover'><th colspan='4' >" . t_trademark('Login Page') . "</th></tr>";
       echo "<tr class='tab_bg_1'>";
       echo "<td>" . t_trademark('Theme') . "</td>";
       echo "<td colspan='2'>";
       echo sprintf(
          '<select %1$s>',
-         Html::parseAttributes([
-            'name' => 'login_theme',
-         ])
+         Html::parseAttributes(['name' => 'login_theme'])
       );
 
-      echo '<option value="">GLPI 11 (' . __('Original') . ')</option>';
+      echo '<option value="">GLPI (' . __('Original') . ')</option>';
       foreach (PluginTrademarkTheme::getLoginThemes() as $id => $theme) {
          $attrs = [
-            'name' => 'login_theme',
+            'name'  => 'login_theme',
             'value' => $id,
          ];
 
@@ -442,7 +452,7 @@ class PluginTrademarkConfig extends CommonDBTM {
          echo sprintf(
             '<option %1$s>%2$s</option>',
             Html::parseAttributes($attrs),
-            htmlentities($theme['name'])
+            htmlspecialchars($theme['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
          );
       }
       echo '</select>';
@@ -464,7 +474,7 @@ class PluginTrademarkConfig extends CommonDBTM {
             templateResult: trademarkFormatThemes,
             templateSelection: trademarkFormatThemes,
             width: '100%',
-            containerCssClass: 'trademark-themeselect-container',
+            selectionCssClass: 'trademark-themeselect-container',
             dropdownCssClass: 'trademark-themeselect-dropdown',
             escapeMarkup: function(m) {
                return m;
@@ -481,7 +491,7 @@ class PluginTrademarkConfig extends CommonDBTM {
             var url = <?php echo json_encode($CFG_GLPI['root_doc'] . "/index.php") ?>;
             url += '?noAUTO=1';
             var theme = $("select[name=login_theme]").val() || 'original';
-            url += '&theme=' + theme;
+            url += '&theme=' + encodeURIComponent(theme);
             window.open(url, 'trademark_preview', 'titlebar=0&status=0');
          });
       </script>
@@ -492,8 +502,8 @@ class PluginTrademarkConfig extends CommonDBTM {
       $themeInfo = PluginTrademarkTheme::getThemeInfo($this->fields['login_theme']);
       if ($themeInfo && isset($themeInfo['variables'])) {
          foreach ($themeInfo['variables'] as $k => $v) {
-            $themeId = $themeInfo['id'];
-            $fieldName = "login_theme-$themeId-$k";
+            $themeId    = $themeInfo['id'];
+            $fieldName  = "login_theme-$themeId-$k";
             $fieldValue = $v['default'];
             if (isset($this->fields[$fieldName]) && $this->fields[$fieldName]) {
                $fieldValue = $this->fields[$fieldName];
@@ -501,13 +511,11 @@ class PluginTrademarkConfig extends CommonDBTM {
             echo "<tr class='tab_bg_1'>";
             echo "<td>" . t_trademark($v['name']) . "</td>";
             echo "<td>";
-            Html::showColorField($fieldName, [
-               'value' => $fieldValue
-            ]);
+            Html::showColorField($fieldName, ['value' => $fieldValue]);
             echo "&nbsp;";
             echo Html::getCheckbox([
                'title' => t_trademark('Reset'),
-               'name'  => "_blank_$fieldName"
+               'name'  => "_blank_$fieldName",
             ]);
             echo "&nbsp;" . t_trademark('Reset');
             echo "</td>";
@@ -528,17 +536,17 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo sprintf(
          '<input type="text" %1$s />',
          Html::parseAttributes([
-            'name' => 'login_picture_max_width',
+            'name'  => 'login_picture_max_width',
             'value' => $this->fields['login_picture_max_width'],
          ])
       );
       echo "</td>";
-      echo "<td>" . __('Height')  . "</td>";
+      echo "<td>" . __('Height') . "</td>";
       echo "<td>";
       echo sprintf(
          '<input type="text" %1$s />',
          Html::parseAttributes([
-            'name' => 'login_picture_max_height',
+            'name'  => 'login_picture_max_height',
             'value' => $this->fields['login_picture_max_height'],
          ])
       );
@@ -550,16 +558,15 @@ class PluginTrademarkConfig extends CommonDBTM {
       $this->buildPictureLine('login_background_picture', '1920px x 1080px');
       echo "</tr>\n";
 
-      // Custom CSS Login
       $this->buildCssLine('login', t_trademark('Login Page'));
       echo "</table>";
       echo "</div>";
 
-      // Internal Page
+      // ── Página Interna ────────────────────────────────────────────────────────
       echo "<div id='tab_trademark_internal'>";
       echo "<table class='tab_cadre_fixe'>";
 
-      echo  "<tr class='noHover'><th colspan='4' >" . t_trademark('Internal Page') . "</th></tr>";
+      echo "<tr class='noHover'><th colspan='4' >" . t_trademark('Internal Page') . "</th></tr>";
       echo "<tr class='tab_bg_1'>";
       echo "<td>" . __('Picture') . "</td>";
       $this->buildPictureLine('internal_picture', '100px x 55px');
@@ -571,29 +578,26 @@ class PluginTrademarkConfig extends CommonDBTM {
       echo sprintf(
          '<input type="text" %1$s />',
          Html::parseAttributes([
-            'name' => 'internal_picture_width',
+            'name'  => 'internal_picture_width',
             'value' => $this->fields['internal_picture_width'],
          ])
       );
       echo "</td>";
-      echo "<td>" . __('Height')  . "</td>";
+      echo "<td>" . __('Height') . "</td>";
       echo "<td>";
       echo sprintf(
          '<input type="text" %1$s />',
          Html::parseAttributes([
-            'name' => 'internal_picture_height',
+            'name'  => 'internal_picture_height',
             'value' => $this->fields['internal_picture_height'],
          ])
       );
       echo "</td>";
       echo "</tr>\n";
 
-      // Custom CSS Internal
       $this->buildCssLine('internal', t_trademark('Internal Page'));
       echo "</table>";
       echo "</div>";
-
-      // echo "</div>";
 
       echo Html::scriptBlock("$('#tabs$rand').tabs({
          activate: function(event, ui) {
@@ -616,5 +620,7 @@ class PluginTrademarkConfig extends CommonDBTM {
       }
 
       Html::closeForm();
+
+      return true;
    }
 }

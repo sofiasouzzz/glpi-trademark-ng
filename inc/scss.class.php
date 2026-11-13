@@ -2,11 +2,11 @@
 
 class PluginTrademarkScss {
 
-   static function hasScssSuport() {
+   public static function hasScssSuport() {
       return true;
    }
 
-   static function compileScss($content, $variables = []) {
+   public static function compileScss($content, $variables = []) {
       global $GLPI_CACHE;
 
       $scss = new \ScssPhp\ScssPhp\Compiler();
@@ -44,11 +44,11 @@ class PluginTrademarkScss {
 
       $ckey = md5($content . json_encode($variables));
 
-      if ($GLPI_CACHE->has($ckey) && !isset($_GET['reload']) && !isset($_GET['nocache'])) {
+      if ($GLPI_CACHE && $GLPI_CACHE->has($ckey) && !isset($_GET['reload']) && !isset($_GET['nocache'])) {
          $css = $GLPI_CACHE->get($ckey);
       } else {
          $css = $scss->compileString($content, GLPI_ROOT . '/trademark.scss')->getCss();
-         if (!isset($_GET['nocache'])) {
+         if ($GLPI_CACHE && !isset($_GET['nocache'])) {
             $GLPI_CACHE->set($ckey, $css);
          }
       }
@@ -56,7 +56,7 @@ class PluginTrademarkScss {
       return $css;
    }
 
-   static function getLoginCSS($theme = null, $variables = []) {
+   public static function getLoginCSS($theme = null, $variables = []) {
       if (!$theme) {
          $theme = PluginTrademarkConfig::getConfig("login_theme", '');
       }
@@ -67,7 +67,7 @@ class PluginTrademarkScss {
 
       $picture = PluginTrademarkConfig::getConfig("login_background_picture", '');
 
-      if (!$picture && $themeInfo && $themeInfo['login-background']) {
+      if (!$picture && $themeInfo && isset($themeInfo['login-background'])) {
          $picture = $themeInfo['login-background'] . '&theme=' . $themeInfo['id'];
       }
 
@@ -103,7 +103,7 @@ class PluginTrademarkScss {
             }
          }
 
-         if ($themeInfo && $themeInfo['login-scss']) {
+         if ($themeInfo && isset($themeInfo['login-scss'])) {
             $scssPath = str_replace('\\', '/', $themeInfo['path'] . '/' . $themeInfo['login-scss']);
             $css_custom = "@import '" . $scssPath . "';\n" . $css_custom;
          }
@@ -116,7 +116,7 @@ class PluginTrademarkScss {
             \Glpi\Application\ErrorHandler::getInstance()->handleException($th);
          }
       } else {
-         if ($themeInfo && $themeInfo['login-css']) {
+         if ($themeInfo && isset($themeInfo['login-css'])) {
             $css .= file_get_contents($themeInfo['path'] . '/' . $themeInfo['login-css']) . "\n";
          }
 
