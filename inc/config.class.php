@@ -101,7 +101,13 @@ class PluginTrademarkConfig extends CommonDBTM
       return $input;
    }
 
-   protected static function checkCSS(string $name, string $label, array $input, array $old): array
+   protected static function checkCSS(
+      string $name,
+      string $label,
+      array $input,
+      array $old,
+      bool &$isValid
+   ): array
    {
       $fullName = "{$name}_css_custom";
       $type     = "{$name}_css_type";
@@ -115,14 +121,42 @@ class PluginTrademarkConfig extends CommonDBTM
          $input[$fullName] = preg_replace('/\\\\r\\\\n/', "\n", $input[$fullName]);
          $input[$fullName] = preg_replace('/\\\\n/', "\n", $input[$fullName]);
 
-         if ($input[$type] === 'scss' && PluginTrademarkScss::hasScssSuport()) {
+         $scssContent    = '';
+         $themeVariables = [];
+         if ($name === 'login') {
+            $themeId = $input['login_theme'] ?? ($old['login_theme'] ?? '');
+            $themeInfo = false;
+            if (is_string($themeId) && $themeId !== '') {
+               $themeInfo = PluginTrademarkTheme::getLoginThemes()[$themeId] ?? false;
+            }
+            if ($themeInfo && isset($themeInfo['variables'])) {
+               foreach ($themeInfo['variables'] as $key => $variable) {
+                  $fieldName = "login_theme-{$themeInfo['id']}-{$key}";
+                  $fieldValue = $input[$fieldName] ?? ($old[$fieldName] ?? $variable['default']);
+                  if ($fieldValue === '') {
+                     $fieldValue = $variable['default'];
+                  }
+                  $themeVariables[$key] = \ScssPhp\ScssPhp\ValueConverter::parseValue((string) $fieldValue);
+               }
+            }
+            if ($themeInfo && isset($themeInfo['login-scss'])) {
+               $scssPath = str_replace('\\', '/', $themeInfo['path'] . '/' . $themeInfo['login-scss']);
+               $scssContent = "@import '{$scssPath}';\n";
+            }
+         }
+
+         if ($input[$type] === 'scss') {
+            $scssContent .= $input[$fullName];
+         }
+
+         if ($scssContent !== '' && PluginTrademarkScss::hasScssSuport()) {
             try {
-               $variables                         = [];
-               $variables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
-               PluginTrademarkScss::compileScss($input[$fullName], $variables);
+               $themeVariables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
+               PluginTrademarkScss::compileScss($scssContent, $themeVariables);
             } catch (\Throwable $th) {
                $message = sprintf(t_trademark('Unable to compile the SCSS (%1$s). Message: '), $label);
                Session::addMessageAfterRedirect($message . $th->getMessage(), true, ERROR);
+               $isValid = false;
             }
          }
       }
@@ -136,13 +170,17 @@ class PluginTrademarkConfig extends CommonDBTM
 
       unset($input['_no_history']);
 
-      $input = self::checkPicture('favicon_picture', $input, $old, 192, 192, 192);
-      $input = self::checkPicture('login_picture', $input, $old, 145, 80, 300);
-      $input = self::checkPicture('internal_picture', $input, $old, 100, 55, 300);
-      $input = self::checkPicture('login_background_picture', $input, $old);
+      $isValid = true;
+      $input = self::checkCSS('login', t_trademark('Login Page'), $input, $old, $isValid);
+      $input = self::checkCSS('internal', t_trademark('Internal Page'), $input, $old, $isValid);
+      if (!$isValid) {
+         return [];
+      }
 
-      $input = self::checkCSS('login', t_trademark('Login Page'), $input, $old);
-      $input = self::checkCSS('internal', t_trademark('Internal Page'), $input, $old);
+      $input = self::checkPicture('favicon_picture', $input, $old, 192, 192, 192);
+      $input = self::checkPicture('login_picture', $input, $old, 300, 300, 300);
+      $input = self::checkPicture('internal_picture', $input, $old, 300, 300, 300);
+      $input = self::checkPicture('login_background_picture', $input, $old);
 
       foreach ($input as $key => $value) {
          if ($value && strpos($key, '_blank_') === 0) {

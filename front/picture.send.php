@@ -29,6 +29,7 @@ if ($fullPath === false || !is_file($fullPath) || !str_starts_with($fullPath, $b
 }
 
 $mimes = [
+   'bmp'  => 'image/bmp',
    'png'  => 'image/png',
    'jpg'  => 'image/jpeg',
    'jpeg' => 'image/jpeg',

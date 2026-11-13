@@ -107,8 +107,7 @@ class PluginTrademarkToolbox {
    }
 
    /**
-    * Resize a picture to the new size
-    * Always produce a JPG file!
+    * Resize a picture to fit within the requested dimensions while preserving its format and aspect ratio.
     *
     * @since 0.85
     *
@@ -136,8 +135,11 @@ class PluginTrademarkToolbox {
       $max_size = 500
    ) {
 
-      //get img informations (dimensions and extension)
-      $img_infos  = getimagesize($source_path);
+      $img_infos = @getimagesize($source_path);
+      if ($img_infos === false || $img_infos[0] <= 0 || $img_infos[1] <= 0) {
+         return false;
+      }
+
       if (empty($img_width)) {
          $img_width  = $img_infos[0];
       }
@@ -151,27 +153,33 @@ class PluginTrademarkToolbox {
          $new_height = $img_infos[1];
       }
 
-      // Image max size is 500 pixels : is set to 0 no resize
+      if ($img_width <= 0 || $img_height <= 0 || $new_width <= 0 || $new_height <= 0) {
+         return false;
+      }
+
+      $max_width  = $new_width;
+      $max_height = $new_height;
       if ($max_size > 0) {
-         if (($img_width > $max_size)
-            || ($img_height > $max_size)
-         ) {
-            $source_aspect_ratio = $img_width / $img_height;
-            if ($source_aspect_ratio < 1) {
-               $new_width  = $max_size * $source_aspect_ratio;
-               $new_height = $max_size;
-            } else {
-               $new_width  = $max_size;
-               $new_height = $max_size / $source_aspect_ratio;
-            }
-         }
+         $max_width  = min($max_width, $max_size);
+         $max_height = min($max_height, $max_size);
+      }
+
+      $scale = min($max_width / $img_width, $max_height / $img_height);
+      if ($max_size > 0) {
+         $scale = min($scale, $max_size / max($img_width, $img_height));
       }
 
       $img_type = $img_infos[2];
+      if ($img_type === IMAGETYPE_GIF || $scale >= 1.0) {
+         return copy($source_path, $dest_path);
+      }
+
+      $new_width  = max(1, (int) round($img_width * $scale));
+      $new_height = max(1, (int) round($img_height * $scale));
 
       switch ($img_type) {
          case IMAGETYPE_BMP:
-            $source_res = imagecreatefromwbmp($source_path);
+            $source_res = function_exists('imagecreatefrombmp') ? imagecreatefrombmp($source_path) : false;
             break;
 
          case IMAGETYPE_GIF:
@@ -186,22 +194,31 @@ class PluginTrademarkToolbox {
             $source_res = imagecreatefrompng($source_path);
             break;
 
+         case IMAGETYPE_WEBP:
+            $source_res = function_exists('imagecreatefromwebp') ? imagecreatefromwebp($source_path) : false;
+            break;
+
          default:
             return false;
       }
 
-      //create new img resource for store thumbnail
-      $source_dest = imagecreatetruecolor($new_width, $new_height);
+      if ($source_res === false) {
+         return false;
+      }
 
-      // set transparent background for PNG/GIF
-      if ($img_type === IMAGETYPE_GIF || $img_type === IMAGETYPE_PNG) {
+      $source_dest = imagecreatetruecolor($new_width, $new_height);
+      if ($source_dest === false) {
+         imagedestroy($source_res);
+         return false;
+      }
+
+      if ($img_type === IMAGETYPE_GIF || $img_type === IMAGETYPE_PNG || $img_type === IMAGETYPE_WEBP) {
          imagecolortransparent($source_dest, imagecolorallocatealpha($source_dest, 0, 0, 0, 127));
          imagealphablending($source_dest, false);
          imagesavealpha($source_dest, true);
       }
 
-      //resize image
-      imagecopyresampled(
+      $resized = imagecopyresampled(
          $source_dest,
          $source_res,
          0,
@@ -214,19 +231,24 @@ class PluginTrademarkToolbox {
          $img_height
       );
 
-      //output img
-      $result = null;
-      switch ($img_type) {
-         case IMAGETYPE_GIF:
-         case IMAGETYPE_PNG:
-            $result = imagepng($source_dest, $dest_path);
-            break;
-
-         case IMAGETYPE_JPEG:
-         default:
-            $result = imagejpeg($source_dest, $dest_path, 90);
-            break;
+      if (!$resized) {
+         imagedestroy($source_res);
+         imagedestroy($source_dest);
+         return false;
       }
+
+      $result = match ($img_type) {
+         IMAGETYPE_BMP => function_exists('imagebmp') && imagebmp($source_dest, $dest_path),
+         IMAGETYPE_GIF => imagegif($source_dest, $dest_path),
+         IMAGETYPE_JPEG => imagejpeg($source_dest, $dest_path, 95),
+         IMAGETYPE_PNG => imagepng($source_dest, $dest_path),
+         IMAGETYPE_WEBP => function_exists('imagewebp') && imagewebp($source_dest, $dest_path, 90),
+         default => false,
+      };
+
+      imagedestroy($source_res);
+      imagedestroy($source_dest);
+
       return $result;
    }
 }
