@@ -77,9 +77,9 @@ label.form-label {
    height: 100% !important;
 }
 
-button.btn.btn-primary.w-100 {
+.page-anonymous .btn {
    background: transparent;
-   color: $btn-foreground-color;
+   color: $btn-foreground-color !important;
    padding: 11px;
    border-radius: 30px;
    border: 1px solid #fff;

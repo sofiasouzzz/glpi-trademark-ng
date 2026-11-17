@@ -46,7 +46,16 @@ class PluginTrademarkScss {
          fn($value) => $value instanceof \ScssPhp\ScssPhp\Value\Value ? (string) $value : $value,
          $variables
       );
-      $ckey = md5($content . json_encode($cacheVariables));
+      $importHashes = [];
+      if (preg_match_all('/@import\s+["\']([^"\']+)["\']/', $content, $imports)) {
+         foreach ($imports[1] as $import) {
+            $importPath = str_starts_with($import, '/') ? $import : GLPI_ROOT . '/' . $import;
+            if (is_file($importPath)) {
+               $importHashes[$importPath] = hash_file('sha256', $importPath);
+            }
+         }
+      }
+      $ckey = md5($content . json_encode($cacheVariables) . json_encode($importHashes));
 
       if ($GLPI_CACHE && $GLPI_CACHE->has($ckey) && !isset($_GET['reload']) && !isset($_GET['nocache'])) {
          $css = $GLPI_CACHE->get($ckey);

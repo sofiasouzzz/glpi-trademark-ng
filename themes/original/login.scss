@@ -109,9 +109,9 @@ body {
    background: linear-gradient(360deg, #1c2e63 65%, #3a5693 65%);
 }
 
-button.btn.btn-primary.w-100 {
+.page-anonymous .btn {
    background: $btn-background-color;
-   color: $btn-foreground-color;
+   color: $btn-foreground-color !important;
    padding: 11px;
    border-radius: 30px;
    border: 1px solid #fff;
