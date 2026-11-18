@@ -58,11 +58,14 @@ function plugin_trademark_display_login(): void
       $pictureUrl = PluginTrademarkToolbox::getPictureUrl($loginPicture);
 
       // Valida que os valores de tamanho são dimensões CSS seguras antes de passar ao template.
-      $rawWidth  = PluginTrademarkConfig::getConfig('login_picture_max_width', '145px');
-      $rawHeight = PluginTrademarkConfig::getConfig('login_picture_max_height', '80px');
-      $cssDim    = '/^\d+(\.\d+)?(px|em|rem|%|vh|vw)$/';
-      $maxWidth  = preg_match($cssDim, $rawWidth)  ? $rawWidth  : '145px';
-      $maxHeight = preg_match($cssDim, $rawHeight) ? $rawHeight : '80px';
+      $maxWidth  = PluginTrademarkToolbox::getCssDimension(
+         PluginTrademarkConfig::getConfig('login_picture_max_width', '145px'),
+         '145px'
+      );
+      $maxHeight = PluginTrademarkToolbox::getCssDimension(
+         PluginTrademarkConfig::getConfig('login_picture_max_height', '80px'),
+         '80px'
+      );
    }
 
    // 5. Favicon.

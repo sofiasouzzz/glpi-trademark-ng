@@ -122,11 +122,7 @@ class PluginTrademarkScss {
 
          $themeVariables['trademark_timestamp'] = PluginTrademarkToolbox::getTimestamp();
 
-         try {
-            $css .= PluginTrademarkScss::compileScss($css_custom, $themeVariables);
-         } catch (\Throwable $th) {
-            \Glpi\Application\ErrorHandler::getInstance()->handleException($th);
-         }
+         $css .= PluginTrademarkScss::compileScss($css_custom, $themeVariables);
       } else {
          if ($themeInfo && isset($themeInfo['login-scss'])) {
             $css .= PluginTrademarkScss::compileScss(

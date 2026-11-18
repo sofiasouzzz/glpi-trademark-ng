@@ -17,8 +17,14 @@ $css  = '';
 $picture = PluginTrademarkConfig::getConfig("{$name}_picture", '');
 if ($picture) {
    $picUrl = PluginTrademarkToolbox::getPictureUrl($picture);
-   $width  = PluginTrademarkConfig::getConfig("{$name}_picture_width", '100px');
-   $height = PluginTrademarkConfig::getConfig("{$name}_picture_height", '55px');
+   $width  = PluginTrademarkToolbox::getCssDimension(
+      PluginTrademarkConfig::getConfig("{$name}_picture_width", '100px'),
+      '100px'
+   );
+   $height = PluginTrademarkToolbox::getCssDimension(
+      PluginTrademarkConfig::getConfig("{$name}_picture_height", '55px'),
+      '55px'
+   );
 
    // GLPI 12 uses CSS variables (--glpi-logo, --glpi-logo-light, --glpi-logo-dark).
    // Overriding them on :root and .glpi-logo ensures immediate rendering without flicker.
@@ -56,17 +62,6 @@ if ($css_type === 'scss' && $css_custom && PluginTrademarkScss::hasScssSuport())
    $css .= $css_custom;
 }
 
-header('Content-Type: text/css; charset=UTF-8');
-header('X-Content-Type-Options: nosniff');
-
-$is_cacheable = !isset($_GET['debug']) && !isset($_GET['nocache']);
-if ($is_cacheable) {
-   $max_age = WEEK_TIMESTAMP;
-   header_remove('Pragma');
-   header('Cache-Control: public, max-age=' . $max_age);
-   header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + $max_age));
-} else {
-   header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-}
+PluginTrademarkToolbox::setAssetHeaders('text/css; charset=UTF-8');
 
 echo $css;

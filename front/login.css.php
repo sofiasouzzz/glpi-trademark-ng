@@ -41,9 +41,12 @@ if (!isset($_GET['_'])) {
 
 try {
    $css = PluginTrademarkScss::getLoginCSS($theme);
+   $compilationFailed = false;
 } catch (\Throwable $e) {
    \Toolbox::logInFile('trademark', 'login.css: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n");
    $css = '';
+   http_response_code(500);
+   $compilationFailed = true;
 }
 
 $activeTheme = $theme ?: PluginTrademarkConfig::getConfig('login_theme', '');
@@ -55,11 +58,14 @@ if (!$loginPicture && $themeInfo && isset($themeInfo['login-logo'])) {
 
 if ($loginPicture) {
    $pictureUrl = PluginTrademarkToolbox::getPictureUrl($loginPicture);
-   $rawWidth   = PluginTrademarkConfig::getConfig('login_picture_max_width', '145px');
-   $rawHeight  = PluginTrademarkConfig::getConfig('login_picture_max_height', '80px');
-   $cssDim     = '/^\d+(\.\d+)?(px|em|rem|%|vh|vw)$/';
-   $maxWidth   = preg_match($cssDim, $rawWidth) ? $rawWidth : '145px';
-   $maxHeight  = preg_match($cssDim, $rawHeight) ? $rawHeight : '80px';
+   $maxWidth   = PluginTrademarkToolbox::getCssDimension(
+      PluginTrademarkConfig::getConfig('login_picture_max_width', '145px'),
+      '145px'
+   );
+   $maxHeight  = PluginTrademarkToolbox::getCssDimension(
+      PluginTrademarkConfig::getConfig('login_picture_max_height', '80px'),
+      '80px'
+   );
    $css       .= '.page-anonymous .glpi-logo{'
       . '--logo:url("' . $pictureUrl . '");'
       . 'content:url("' . $pictureUrl . '");'
@@ -68,17 +74,6 @@ if ($loginPicture) {
       . '}';
 }
 
-header('Content-Type: text/css; charset=UTF-8');
-header('X-Content-Type-Options: nosniff');
-
-$is_cacheable = !isset($_GET['debug']) && !isset($_GET['nocache']);
-if ($is_cacheable) {
-   $max_age = WEEK_TIMESTAMP;
-   header_remove('Pragma');
-   header('Cache-Control: public, max-age=' . $max_age);
-   header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + $max_age));
-} else {
-   header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-}
+PluginTrademarkToolbox::setAssetHeaders('text/css; charset=UTF-8', !$compilationFailed);
 
 echo $css;

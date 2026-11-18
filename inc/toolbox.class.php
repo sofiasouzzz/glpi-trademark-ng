@@ -2,6 +2,34 @@
 
 class PluginTrademarkToolbox {
 
+   public static function setAssetHeaders(string $contentType, bool $allowCache = true): void {
+      header('Content-Type: ' . $contentType);
+      header('X-Content-Type-Options: nosniff');
+
+      $is_cacheable = $allowCache && !isset($_GET['debug']) && !isset($_GET['nocache']);
+      if ($is_cacheable) {
+         $max_age = WEEK_TIMESTAMP;
+         header_remove('Pragma');
+         header('Cache-Control: public, max-age=' . $max_age);
+         header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + $max_age));
+      } else {
+         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+         header_remove('Expires');
+      }
+   }
+
+   public static function getCssDimension(mixed $value, string $default): string {
+      if (
+         !is_string($value)
+         || strlen($value) > 32
+         || !preg_match('/\A\d+(?:\.\d+)?(?:px|em|rem|%|vh|vw)\z/', $value)
+      ) {
+         return $default;
+      }
+
+      return $value;
+   }
+
    public static function getTimestamp() {
       global $GLPI_CACHE;
 

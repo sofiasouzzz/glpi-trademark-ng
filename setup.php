@@ -67,7 +67,7 @@ function plugin_version_trademark() {
         'homepage'       => 'https://github.com/sofiasouzzz/trademark-glpi',
         'requirements'   => [
             'glpi' => [
-                'min' => '12.0.0',
+                'min' => PLUGIN_TRADEMARK_MIN_GLPI_VERSION,
             ],
             'php' => [
                 'min' => PLUGIN_TRADEMARK_MIN_PHP_VERSION,

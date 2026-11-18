@@ -11,28 +11,23 @@ $dont_check_maintenance_mode = true;
 
 include('../../../inc/includes.php');
 
-header('Content-Type: application/javascript; charset=UTF-8');
-header('X-Content-Type-Options: nosniff');
-
-$is_cacheable = !isset($_GET['debug']) && !isset($_GET['nocache']);
-if ($is_cacheable) {
-   $max_age = WEEK_TIMESTAMP;
-   header_remove('Pragma');
-   header('Cache-Control: public, max-age=' . $max_age);
-   header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + $max_age));
-} else {
-   header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-}
+PluginTrademarkToolbox::setAssetHeaders('application/javascript; charset=UTF-8');
 ?>
 $(function () {
 <?php
+$jsonFlags = JSON_INVALID_UTF8_SUBSTITUTE
+   | JSON_HEX_TAG
+   | JSON_HEX_APOS
+   | JSON_HEX_QUOT
+   | JSON_HEX_AMP;
+
 $favicon = PluginTrademarkConfig::getConfig('favicon_picture');
 if ($favicon) :
    $faviconUrl = PluginTrademarkToolbox::getPictureUrl($favicon);
    ?>
    var $icon = $('link[rel*=icon]');
    $icon.attr('type', null);
-   $icon.attr('href', <?php echo json_encode($faviconUrl); ?>);
+   $icon.attr('href', <?php echo json_encode($faviconUrl, $jsonFlags); ?>);
 <?php
 endif;
 
@@ -40,7 +35,7 @@ $pageTitle = PluginTrademarkConfig::getConfig('page_title');
 if ($pageTitle) :
    ?>
    var $title = $('title');
-   var newTitle = $title.text().replace('GLPI', <?php echo json_encode($pageTitle); ?>);
+   var newTitle = $title.text().replace('GLPI', <?php echo json_encode($pageTitle, $jsonFlags); ?>);
    $title.text(newTitle);
 <?php
 endif;
@@ -56,7 +51,7 @@ endif;
 if ($footerDisplay === 'custom') :
    $footerText = \Glpi\RichText\RichText::getEnhancedHtml($footerText);
    ?>
-   $('div[id^=about_modal_] .copyright').parent().parent().html(<?php echo json_encode($footerText); ?>);
+   $('div[id^=about_modal_] .copyright').parent().replaceWith(<?php echo json_encode($footerText, $jsonFlags); ?>);
 <?php
 endif;
 ?>
