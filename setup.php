@@ -60,7 +60,7 @@ function plugin_init_trademark() {
 
 function plugin_version_trademark() {
     return [
-        'name'           => 'Trademark',
+        'name'           => 'Trademark NG',
         'version'        => PLUGIN_TRADEMARK_VERSION,
         'author'         => 'edgardmessias, ssouz(Fork GLPI 12)',
         'license'        => 'GPLv2+',

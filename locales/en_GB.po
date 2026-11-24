@@ -19,8 +19,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: inc/config.class.php:27 setup.php:53
-msgid "Trademark"
-msgstr "Trademark"
+msgid "Trademark NG"
+msgstr "Trademark NG"
 
 #: inc/config.class.php:105
 #, php-format

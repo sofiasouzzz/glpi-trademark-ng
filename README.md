@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎨 Trademark for GLPI 12+
+# 🎨 Trademark NG for GLPI 12+
 
 **Make GLPI look like your brand.**
 Customize logos, login background, favicons, and custom CSS/SCSS styles, all from the GLPI interface.
@@ -70,11 +70,11 @@ Customize logos, login background, favicons, and custom CSS/SCSS styles, all fro
 
 1. Log in to GLPI as a super-admin.
 2. Go to **Setup > Plugins**.
-3. Find **Trademark** in the list, click **Install**, then **Enable**.
+3. Find **Trademark NG** in the list, click **Install**, then **Enable**.
 
 ## Usage
 
-After enabling the plugin, open **Setup > Trademark** to:
+After enabling the plugin, open **Setup > Trademark NG** to:
 
 * Upload your login background, logos, and favicons.
 * Add custom CSS/SCSS for each theme.

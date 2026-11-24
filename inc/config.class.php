@@ -30,7 +30,7 @@ class PluginTrademarkConfig extends CommonDBTM
    {
       switch (get_class($item)) {
          case 'Config':
-            return [1 => t_trademark('Trademark')];
+            return [1 => t_trademark('Trademark NG')];
          default:
             return '';
       }
@@ -423,7 +423,7 @@ class PluginTrademarkConfig extends CommonDBTM
          'rand'                      => $rand,
          'root_doc'                  => $CFG_GLPI['root_doc'],
          'labels'                    => [
-            'trademark'                 => t_trademark('Trademark'),
+            'trademark'                 => t_trademark('Trademark NG'),
             'customize'                 => __('Customize logos, backgrounds and custom styling'),
             'favicon_title'             => t_trademark('Favicon and Title'),
             'login_page'                => t_trademark('Login Page'),

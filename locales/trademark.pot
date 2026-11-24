@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: inc/config.class.php:27 setup.php:53
-msgid "Trademark"
+msgid "Trademark NG"
 msgstr ""
 
 #: inc/config.class.php:105

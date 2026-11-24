@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root>
-    <name>Trademark for GLPI</name>
+    <name>Trademark NG</name>
     <key>trademark</key>
     <state>stable</state>
     <logo>https://raw.githubusercontent.com/sofiasouzzz/glpi-trademark-ng/main/plugin.png</logo>
@@ -11,9 +11,9 @@
         </short>
         <long>
             <en><![CDATA[
-# Trademark for GLPI
+# Trademark NG
 
-The first stable release of the Trademark plugin for GLPI 12. Customize your GLPI branding directly from the interface.
+The first stable release of Trademark NG for GLPI 12. Customize your GLPI branding directly from the interface.
 
 ## Features
 
@@ -32,16 +32,16 @@ The first stable release of the Trademark plugin for GLPI 12. Customize your GLP
 
 1. Download the `trademark.zip` release archive.
 2. Extract it into `<GLPI_ROOT>/plugins/trademark`.
-3. In GLPI, go to **Setup > Plugins**, then install and enable Trademark.
+3. In GLPI, go to **Setup > Plugins**, then install and enable Trademark NG.
 
 The plugin directory must be named `trademark`.
 
 For source checkouts or repository archives, install the runtime dependencies from the plugin directory with `composer install --no-dev --no-interaction`.
             ]]></en>
             <pt_BR><![CDATA[
-# Trademark para GLPI
+# Trademark NG para GLPI
 
-Primeira versão estável do plugin Trademark para GLPI 12. Personalize a identidade visual do GLPI diretamente pela interface.
+Primeira versão estável do Trademark NG para GLPI 12. Personalize a identidade visual do GLPI diretamente pela interface.
 
 ## Recursos
 
@@ -60,7 +60,7 @@ Primeira versão estável do plugin Trademark para GLPI 12. Personalize a identi
 
 1. Baixe o arquivo de release `trademark.zip`.
 2. Extraia-o em `<GLPI_ROOT>/plugins/trademark`.
-3. No GLPI, acesse **Configurar > Plugins**, instale e ative o Trademark.
+3. No GLPI, acesse **Configurar > Plugins**, instale e ative o Trademark NG.
 
 O diretório do plugin deve se chamar `trademark`.
 
