@@ -34,4 +34,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-        run: gh release upload "$RELEASE_TAG" trademark.zip trademark.tar.gz --clobber
+        run: gh release upload "$RELEASE_TAG" trademark.zip trademark.tar.gz --repo "$GITHUB_REPOSITORY" --clobber
