@@ -55,15 +55,22 @@ Customize logos, login background, favicons, and custom CSS/SCSS styles, all fro
    chown -R www-data:www-data /var/www/html/glpi/plugins/trademark
    ```
 
-### Manual installation (ZIP)
+### Manual installation (release archive)
 
-1. Download either `trademark.zip` or `trademark.tar.gz` from the latest release and extract it into the GLPI `plugins` directory. Do not use GitHub's automatically generated **Source code** archives; their folder name matches the repository.
-2. If using a GitHub **Source code** archive, rename its extracted folder to `trademark` (for example, `glpi-trademark-ng-main` → `trademark`) and move it into the `plugins` directory.
-3. For a source archive, install runtime dependencies from the plugin directory:
+1. Open the latest GitHub release and, under **Assets**, download `trademark.zip` or `trademark.tar.gz`.
+2. Extract the archive into the GLPI `plugins` directory. It contains the correctly named `trademark/` folder and is ready to install.
 
-   ```bash
-   composer install --no-dev --no-interaction
-   ```
+Do not download GitHub's automatically generated **Source code (zip)** or **Source code (tar.gz)** links. Those archives use a versioned repository folder name (such as `glpi-trademark-ng-1.0.0`) that GLPI does not recognize.
+
+The release workflow creates and attaches the installable assets when a release is published. To package an existing release, open **Actions > Package GLPI plugin release > Run workflow**, enter the release tag, and run it. Download the named archives from the release's **Assets** only after the workflow completes successfully.
+
+### Installing from source
+
+If installing from a GitHub source archive or clone, rename the extracted directory to `trademark` if needed, then install runtime dependencies from that directory:
+
+```bash
+composer install --no-dev --no-interaction
+```
 
 ### Activating the plugin
 
@@ -80,7 +87,7 @@ After enabling the plugin, open **Setup > Trademark NG** to:
 
 ## Folder name (important)
 
-GLPI identifies a plugin by the name of its directory, which must match the plugin key. Before installing, **rename the plugin folder to `trademark`**:
+GLPI identifies a plugin by the name of its directory, which must match the plugin key. The release archives already contain the required `trademark/` directory. When installing from a source archive, rename the extracted directory to `trademark`:
 
 ```bash
 mv trademark-glpi trademark
@@ -96,4 +103,4 @@ glpi/
         └── ...
 ```
 
-If you cloned the repository without specifying a folder name, the directory will be called `trademark-glpi` and GLPI will **not** detect the plugin. Rename it to `trademark` and reload the **Setup > Plugins** page.
+If you cloned the repository without specifying a folder name, the directory may be called `glpi-trademark-ng` (or include the release version). GLPI will **not** detect the plugin under that name. Rename it to `trademark` and reload the **Setup > Plugins** page.
