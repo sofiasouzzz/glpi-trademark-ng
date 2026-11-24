@@ -1,0 +1,37 @@
+name: Package GLPI plugin release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to package
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          path: trademark
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+      - name: Install runtime dependencies
+        run: composer install --working-dir=trademark --no-dev --no-interaction --prefer-dist
+      - name: Create installable archives
+        run: |
+          zip -qr trademark.zip trademark -x 'trademark/.git/*'
+          tar -czf trademark.tar.gz --exclude='trademark/.git' trademark
+      - name: Attach archives to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+        run: gh release upload "$RELEASE_TAG" trademark.zip trademark.tar.gz --clobber

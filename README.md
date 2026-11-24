@@ -57,10 +57,9 @@ Customize logos, login background, favicons, and custom CSS/SCSS styles, all fro
 
 ### Manual installation (ZIP)
 
-1. Download the latest release (or the repository ZIP) and extract it.
-2. **Rename the extracted folder to `trademark`** (for example, `trademark-glpi-main` → `trademark`).
-3. Move the `trademark` folder into the `plugins` directory of your GLPI installation.
-4. For a repository ZIP (rather than a packaged release), install runtime dependencies from the plugin directory:
+1. Download either `trademark.zip` or `trademark.tar.gz` from the latest release and extract it into the GLPI `plugins` directory. Do not use GitHub's automatically generated **Source code** archives; their folder name matches the repository.
+2. If using a GitHub **Source code** archive, rename its extracted folder to `trademark` (for example, `glpi-trademark-ng-main` → `trademark`) and move it into the `plugins` directory.
+3. For a source archive, install runtime dependencies from the plugin directory:
 
    ```bash
    composer install --no-dev --no-interaction
