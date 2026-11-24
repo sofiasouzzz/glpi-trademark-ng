@@ -1,8 +1,44 @@
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# IDE settings: keep the shared project configuration, ignore local additions
+.idea/
+.vscode/
+
+# Editor backups and temporary files
+*~
+*.bak
+*.old
+*.orig
+*.swp
+*.swo
+
+# Logs and local database dumps
+*.log
+*.dump
+*.sql.gz
+*.sql.dump
+/dump.sql
+/backup*.sql
+
+# Dependencies, caches, and build output
+/vendor/
+/node_modules/
+/.cache/
+/cache/
+/tmp/
+/.phpunit.cache
+/.phpunit.result.cache
+/build/
+/dist/
+
+# Release archives
 /*.tar
 /*.tar.gz
 /*.tgz
 /*.zip
+
+# Generated runtime assets
 /locales/*.mo
-/vendor
 /themes/*/*.css
-.DS_Store

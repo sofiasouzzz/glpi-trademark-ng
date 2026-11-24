@@ -11,7 +11,7 @@ define("PLUGIN_TRADEMARK_MIN_GLPI_VERSION", "12.0.0");
 define("PLUGIN_TRADEMARK_MAX_GLPI_VERSION", "12.9.9");
 
 // Minimal PHP version, inclusive
-define("PLUGIN_TRADEMARK_MIN_PHP_VERSION", "8.5.0");
+define("PLUGIN_TRADEMARK_MIN_PHP_VERSION", "8.3.0");
 
 
 $folder = basename(dirname(__FILE__));

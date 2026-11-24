@@ -45,6 +45,8 @@ Customize logos, login background, favicons, and custom CSS/SCSS styles, all fro
    ```bash
    cd /var/www/html/glpi/plugins
    git clone https://github.com/sofiasouzzz/trademark-glpi.git trademark
+   cd trademark
+   composer install --no-dev --no-interaction
    ```
 
 2. Make sure the web server user can read the files:
@@ -58,6 +60,11 @@ Customize logos, login background, favicons, and custom CSS/SCSS styles, all fro
 1. Download the latest release (or the repository ZIP) and extract it.
 2. **Rename the extracted folder to `trademark`** (for example, `trademark-glpi-main` → `trademark`).
 3. Move the `trademark` folder into the `plugins` directory of your GLPI installation.
+4. For a repository ZIP (rather than a packaged release), install runtime dependencies from the plugin directory:
+
+   ```bash
+   composer install --no-dev --no-interaction
+   ```
 
 ### Activating the plugin
 

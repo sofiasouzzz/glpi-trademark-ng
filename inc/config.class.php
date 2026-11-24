@@ -64,25 +64,27 @@ class PluginTrademarkConfig extends CommonDBTM
             PluginTrademarkToolbox::deletePicture($old[$name]);
          }
          $input[$name] = '';
-      } elseif (isset($input[$new]) && !empty($input[$new]) && !empty($input[$new][0])) {
-         $picName        = array_shift($input[$new]);
-         $picPath        = GLPI_TMP_DIR . '/' . $picName;
-         $picResizedPath = GLPI_TMP_DIR . '/resized_' . $picName;
+      } elseif (isset($input[$new]) && !empty($input[$new])) {
+         if (!empty($input[$new][0])) {
+            $picName        = array_shift($input[$new]);
+            $picPath        = GLPI_TMP_DIR . '/' . $picName;
+            $picResizedPath = GLPI_TMP_DIR . '/resized_' . $picName;
 
-         if ($width || $height) {
-            if (PluginTrademarkToolbox::resizePicture($picPath, $picResizedPath, $width, $height, 0, 0, 0, 0, $max_size)) {
-               $picPath = $picResizedPath;
+            if ($width || $height) {
+               if (PluginTrademarkToolbox::resizePicture($picPath, $picResizedPath, $width, $height, 0, 0, 0, 0, $max_size)) {
+                  $picPath = $picResizedPath;
+               }
             }
-         }
 
-         if ($dest = PluginTrademarkToolbox::savePicture($picPath)) {
-            $input[$name] = $dest;
-         } else {
-            Session::addMessageAfterRedirect(__('Unable to save picture file.'), true, ERROR);
-         }
+            if ($dest = PluginTrademarkToolbox::savePicture($picPath)) {
+               $input[$name] = $dest;
+            } else {
+               Session::addMessageAfterRedirect(__('Unable to save picture file.'), true, ERROR);
+            }
 
-         if (isset($old[$name]) && $old[$name]) {
-            PluginTrademarkToolbox::deletePicture($old[$name]);
+            if (isset($old[$name]) && $old[$name]) {
+               PluginTrademarkToolbox::deletePicture($old[$name]);
+            }
          }
       }
 
@@ -101,6 +103,17 @@ class PluginTrademarkConfig extends CommonDBTM
       return $input;
    }
 
+   private static function hasValidPictureUpload(array $input, string $name): bool
+   {
+      $field = "_$name";
+      if (!isset($input[$field]) || empty($input[$field])) {
+         return true;
+      }
+
+      return is_array($input[$field])
+         && (!isset($input[$field][0]) || is_string($input[$field][0]));
+   }
+
    protected static function checkCSS(
       string $name,
       string $label,
@@ -117,6 +130,12 @@ class PluginTrademarkConfig extends CommonDBTM
       }
 
       if (isset($input[$fullName])) {
+         if (!is_string($input[$fullName])) {
+            Session::addMessageAfterRedirect(__('Invalid CSS input.'), true, ERROR);
+            $isValid = false;
+            return $input;
+         }
+
          $input[$fullName] = html_entity_decode($input[$fullName]);
          $input[$fullName] = preg_replace('/\\\\r\\\\n/', "\n", $input[$fullName]);
          $input[$fullName] = preg_replace('/\\\\n/', "\n", $input[$fullName]);
@@ -175,6 +194,19 @@ class PluginTrademarkConfig extends CommonDBTM
       $input = self::checkCSS('internal', t_trademark('Internal Page'), $input, $old, $isValid);
       if (!$isValid) {
          return [];
+      }
+
+      $pictureFields = [
+         'favicon_picture',
+         'login_picture',
+         'internal_picture',
+         'login_background_picture',
+      ];
+      foreach ($pictureFields as $name) {
+         if (!self::hasValidPictureUpload($input, $name)) {
+            Session::addMessageAfterRedirect(__('Invalid picture upload.'), true, ERROR);
+            return [];
+         }
       }
 
       $input = self::checkPicture('favicon_picture', $input, $old, 192, 192, 192);

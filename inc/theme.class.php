@@ -48,9 +48,32 @@ class PluginTrademarkTheme {
 
       $info = @json_decode($json, true);
 
-      if (!$info) {
+      if (
+         !is_array($info)
+         || !isset($info['name'])
+         || !is_string($info['name'])
+         || $info['name'] === ''
+      ) {
          return false;
       }
+
+      if (isset($info['variables'])) {
+         if (!is_array($info['variables'])) {
+            return false;
+         }
+         foreach ($info['variables'] as $variable) {
+            if (
+               !is_array($variable)
+               || !isset($variable['name'])
+               || !is_string($variable['name'])
+               || !array_key_exists('default', $variable)
+               || !is_scalar($variable['default'])
+            ) {
+               return false;
+            }
+         }
+      }
+
       $info['id'] = $dir;
       $info['path'] = $dirPath;
 
