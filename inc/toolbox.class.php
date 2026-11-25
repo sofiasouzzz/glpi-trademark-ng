@@ -1,8 +1,10 @@
 <?php
 
-class PluginTrademarkToolbox {
+class PluginTrademarkToolbox
+{
 
-   public static function setAssetHeaders(string $contentType, bool $allowCache = true): void {
+   public static function setAssetHeaders(string $contentType, bool $allowCache = true): void
+   {
       header('Content-Type: ' . $contentType);
       header('X-Content-Type-Options: nosniff');
 
@@ -18,7 +20,8 @@ class PluginTrademarkToolbox {
       }
    }
 
-   public static function getCssDimension(mixed $value, string $default): string {
+   public static function getCssDimension(mixed $value, string $default): string
+   {
       if (
          !is_string($value)
          || strlen($value) > 32
@@ -30,7 +33,8 @@ class PluginTrademarkToolbox {
       return $value;
    }
 
-   public static function getTimestamp() {
+   public static function getTimestamp()
+   {
       global $GLPI_CACHE;
 
       if (!$GLPI_CACHE) {
@@ -45,7 +49,8 @@ class PluginTrademarkToolbox {
       return $timestamp;
    }
 
-   public static function setTimestamp($timestamp = null) {
+   public static function setTimestamp($timestamp = null)
+   {
       global $GLPI_CACHE;
 
       if (!$timestamp) {
@@ -62,12 +67,14 @@ class PluginTrademarkToolbox {
       $GLPI_CACHE->set('trademark_timestamp', $timestamp);
    }
 
-   public static function startsWith($haystack, $needle) {
+   public static function startsWith($haystack, $needle)
+   {
       $length = strlen($needle);
       return (substr($haystack, 0, $length) === $needle);
    }
 
-   public static function getPictureUrl($path) {
+   public static function getPictureUrl($path)
+   {
       if (empty($path)) {
          return null;
       }
@@ -86,7 +93,8 @@ class PluginTrademarkToolbox {
       return Html::getPrefixedUrl('/plugins/trademark/front/picture.send.php?' . http_build_query($pictureParams));
    }
 
-   public static function savePicture($src, $uniq_prefix = null) {
+   public static function savePicture($src, $uniq_prefix = null)
+   {
       $basePath = GLPI_PLUGIN_DOC_DIR . "/trademark";
 
       if (method_exists(Document::class, 'isImage') && !Document::isImage($src)) {
@@ -102,8 +110,8 @@ class PluginTrademarkToolbox {
          // Iterate on possible suffix while dest exists.
          // This case will almost never exists as dest is based on an unique id.
          $dest = $basePath
-         . '/' . $subdirectory
-         . '/' . $filename . ($i > 0 ? '_' . $i : '') . '.' . $ext;
+            . '/' . $subdirectory
+            . '/' . $filename . ($i > 0 ? '_' . $i : '') . '.' . $ext;
          $i++;
       } while (file_exists($dest));
 
@@ -118,7 +126,8 @@ class PluginTrademarkToolbox {
       return substr($dest, strlen($basePath . '/')); // Return dest relative to GLPI_PICTURE_DIR
    }
 
-   public static function deletePicture($path) {
+   public static function deletePicture($path)
+   {
       $basePath = GLPI_PLUGIN_DOC_DIR . "/trademark";
       $fullpath = $basePath . '/' . $path;
 
