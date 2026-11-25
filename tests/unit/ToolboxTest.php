@@ -29,4 +29,16 @@ class ToolboxTest extends TestCase {
       yield 'non-string value' => [240];
       yield 'too long' => [str_repeat('1', 33) . 'px'];
    }
+
+   #[\PHPUnit\Framework\Attributes\DataProvider('startsWithCases')]
+   public function testStartsWith(string $haystack, string $needle, bool $expected): void {
+      self::assertSame($expected, PluginTrademarkToolbox::startsWith($haystack, $needle));
+   }
+
+   public static function startsWithCases(): iterable {
+      yield 'matching prefix' => ['trademark plugin', 'trademark', true];
+      yield 'exact match' => ['trademark', 'trademark', true];
+      yield 'non-matching prefix' => ['trademark', 'plugin', false];
+      yield 'empty prefix' => ['trademark', '', true];
+   }
 }
