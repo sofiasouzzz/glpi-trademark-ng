@@ -85,6 +85,15 @@ After enabling the plugin, open **Setup > Trademark NG** to:
 * Upload your login background, logos, and favicons.
 * Add custom CSS/SCSS for each theme.
 
+## Development
+
+Install the development dependencies and run the PHPUnit suite:
+
+```bash
+composer install
+composer test
+```
+
 ## Folder name (important)
 
 GLPI identifies a plugin by the name of its directory, which must match the plugin key. The release archives already contain the required `trademark/` directory. When installing from a source archive, rename the extracted directory to `trademark`:

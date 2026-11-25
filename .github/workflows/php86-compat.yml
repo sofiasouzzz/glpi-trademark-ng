@@ -14,5 +14,9 @@ jobs:
           php-version: '8.6'
       - name: Validate Composer metadata
         run: composer validate --no-check-publish --no-check-all
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+      - name: Run PHPUnit tests
+        run: composer test
       - name: Lint PHP files
         run: find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -r -n1 php -l
